@@ -1,34 +1,72 @@
+/* ---------------------------
+   TAB SWITCHING / UI
+---------------------------- */
+function showTab(tabId) {
+    document.querySelectorAll('.tab').forEach(tab => tab.style.display = "none");
+    document.getElementById(tabId).style.display = "block";
+}
+
+window.onload = () => {
+    showTab('home');
+    loadGames();  // load games on startup
+};
+
+
+/* ---------------------------
+   LOAD INTERNAL GAMES FROM GITHUB API
+---------------------------- */
+
 async function loadGames() {
-    const gameContainer = document.getElementById("game-list");
+    const container = document.getElementById("game-list");
+    if (!container) return; // safety check
+
+    container.innerHTML = "<p>Loading games...</p>";
 
     try {
-        const response = await fetch("https://api.github.com/repos/chrizz67/chs-games-hub/contents/internal-games");
-        const data = await response.json();
+        // 🔥 FETCHES THE FOLDER internal-games FROM YOUR REPO
+        const res = await fetch("https://api.github.com/repos/chrizz67/chs-games-hub/contents/internal-games");
+        const data = await res.json();
 
-        let html = "";
+        container.innerHTML = ""; // clear loading text
 
-        data.forEach(folder => {
-            if (folder.type === "dir") {
-                const name = folder.name;
+        data.forEach(item => {
+            if (item.type === "dir") {
+                const gameFolder = item.name;
 
-                html += `
-                    <div class="game-card" onclick="playGame('${name}')">
-                        <h3>${name}</h3>
-                        <button>Play</button>
+                container.innerHTML += `
+                    <div class="game-card" onclick="openGame('${gameFolder}')">
+                        <h3>${gameFolder}</h3>
+                        <button class="play-btn">Play</button>
                     </div>
                 `;
             }
         });
 
-        gameContainer.innerHTML = html;
+        if (container.innerHTML.trim() === "") {
+            container.innerHTML = "<p>No games found.</p>";
+        }
 
-    } catch (err) {
-        console.error("Game load error:", err);
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = "<p>Error loading games.</p>";
     }
 }
 
-function playGame(folder) {
+
+/* ---------------------------
+   OPEN GAME
+---------------------------- */
+
+function openGame(folder) {
+    // 🔥 This will automatically open internal-games/gameXXX/index.html
     window.location.href = `/internal-games/${folder}/index.html`;
 }
 
-window.onload = loadGames;
+
+/* ---------------------------
+   OPTIONAL: Smooth animations
+---------------------------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.body.classList.add("loaded");
+});
