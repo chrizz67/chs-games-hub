@@ -164,16 +164,22 @@
         </header>
 
         <!-- Internal / External toggle -->
-        <div class="games-toggle">
-          <button class="games-tab active" data-source="internal">Internal</button>
-          <button class="games-tab" data-source="external">External</button>
+        <div class="game-mode-toggle">
+          <button id="modeInternal" class="mode-btn active">Internal</button>
+          <button id="modeExternal" class="mode-btn">External</button>
         </div>
 
-        <!-- Categories pills -->
-        <div id="gamesCategories" class="games-categories"></div>
+        <!-- Categories -->
+        <div id="gameCategories" class="game-cats">
+          <!-- filled by JS -->
+        </div>
 
+        <!-- Search -->
         <input id="gameSearch" class="search" type="text" placeholder="Search games..." />
-        <div id="gameList" class="game-list"></div>
+
+        <!-- Lists -->
+        <div id="gameListInternal" class="game-list"></div>
+        <div id="gameListExternal" class="game-list hidden"></div>
       </section>
 
       <!-- CHAT -->
@@ -246,16 +252,16 @@
     </nav>
   </div>
 
-  <!-- GAME OVERLAY FOR INTERNAL GAMES -->
+  <!-- GAME OVERLAY VIEWER (WITH FULLSCREEN) -->
   <div id="gameOverlay" class="game-overlay hidden">
     <div class="game-overlay-inner">
-      <div class="game-overlay-header">
-        <button id="gameBackBtn" class="icon-btn">←</button>
-        <span id="gameTitle" class="game-title-text"></span>
-        <button id="gameFullscreenBtn" class="icon-btn">⛶</button>
+      <div class="game-overlay-top">
+        <button id="closeGameBtn" class="overlay-back">← Back</button>
+        <span id="gameOverlayTitle" class="overlay-title"></span>
+        <button id="fullscreenBtn" class="overlay-full">⛶</button>
       </div>
       <div class="game-frame-wrap">
-        <iframe id="gameFrame" src="" frameborder="0" allowfullscreen></iframe>
+        <iframe id="gameFrame" src="" allowfullscreen loading="lazy"></iframe>
       </div>
     </div>
   </div>
@@ -263,6 +269,3 @@
   <script src="script.js"></script>
 </body>
 </html>
-<div id="game-list"></div>
-<script src="script.js"></script>
-
