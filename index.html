@@ -162,6 +162,16 @@
         <header class="topbar small">
           <h2>Games</h2>
         </header>
+
+        <!-- Internal / External toggle -->
+        <div class="games-toggle">
+          <button class="games-tab active" data-source="internal">Internal</button>
+          <button class="games-tab" data-source="external">External</button>
+        </div>
+
+        <!-- Categories pills -->
+        <div id="gamesCategories" class="games-categories"></div>
+
         <input id="gameSearch" class="search" type="text" placeholder="Search games..." />
         <div id="gameList" class="game-list"></div>
       </section>
@@ -234,6 +244,20 @@
         <span class="nav-label">Profile</span>
       </button>
     </nav>
+  </div>
+
+  <!-- GAME OVERLAY FOR INTERNAL GAMES -->
+  <div id="gameOverlay" class="game-overlay hidden">
+    <div class="game-overlay-inner">
+      <div class="game-overlay-header">
+        <button id="gameBackBtn" class="icon-btn">←</button>
+        <span id="gameTitle" class="game-title-text"></span>
+        <button id="gameFullscreenBtn" class="icon-btn">⛶</button>
+      </div>
+      <div class="game-frame-wrap">
+        <iframe id="gameFrame" src="" frameborder="0" allowfullscreen></iframe>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>
