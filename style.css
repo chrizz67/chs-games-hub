@@ -1,100 +1,400 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 body {
-    background: #0d0d0f;
-    color: white;
-    padding: 20px;
-    overflow-x: hidden;
+  background: #050509;
+  color: #fff;
 }
 
-/* NAVBAR */
-.navbar {
-    width: 100%;
-    background: #111114;
-    padding: 15px 25px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-radius: 10px;
-    box-shadow: 0 0 25px rgba(0,0,0,0.5);
-    position: sticky;
-    top: 0;
+/* LOGIN SCREEN */
+.screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
 }
 
-.navbar h1 {
-    font-size: 27px;
-    font-weight: 600;
+.screen.hidden {
+  display: none;
 }
 
-.coins-box {
-    background: #18181d;
-    padding: 10px 18px;
-    border-radius: 8px;
-    font-size: 18px;
-    border: 1px solid #2a2a32;
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: radial-gradient(circle at top, #212040, #090912);
+  border-radius: 18px;
+  padding: 24px 22px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+  animation: popIn 0.45s ease;
 }
 
-/* CONTAINER */
-.container {
-    margin-top: 30px;
+.login-card h1 {
+  font-size: 26px;
+  margin-bottom: 4px;
 }
 
-/* HEADERS */
-h2 {
-    margin: 20px 0;
-    font-size: 22px;
+.login-card .sub {
+  font-size: 13px;
+  opacity: 0.7;
+  margin-bottom: 20px;
 }
 
-/* GAME GRID */
-.game-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
+.login-card input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid #353552;
+  background: #11111b;
+  color: #fff;
+  outline: none;
+  font-size: 14px;
 }
 
-.game-card {
-    background: #131317;
-    padding: 25px;
-    border-radius: 12px;
-    text-align: center;
-    transition: 0.25s ease;
-    cursor: pointer;
-    border: 1px solid #1f1f26;
+.login-card input:focus {
+  border-color: #e53939;
 }
 
-.game-card:hover {
-    transform: translateY(-5px);
-    background: #191920;
-    box-shadow: 0 0 25px rgba(255,255,255,0.05);
+.login-card button {
+  width: 100%;
+  padding: 11px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #e53939, #ff7b55);
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.login-card button:active {
+  transform: scale(0.97);
+  box-shadow: 0 0 0 rgba(0,0,0,0);
+}
+
+.small {
+  margin-top: 8px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* APP LAYOUT */
+.app.hidden {
+  display: none;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at top, #19192a, #050509);
+}
+
+.main {
+  flex: 1;
+  padding: 16px 16px 80px;
+  animation: slideUp 0.35s ease;
+}
+
+/* TITLES */
+.title {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+/* CARDS */
+.card {
+  background: rgba(16, 16, 28, 0.97);
+  border-radius: 16px;
+  padding: 14px 14px 16px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 8px 26px rgba(0,0,0,0.8);
+  animation: fadeIn 0.4s ease;
+}
+
+.card.big {
+  padding: 18px 16px 18px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.coins-display {
+  font-size: 34px;
+  margin-top: 6px;
+}
+
+.muted {
+  font-size: 12px;
+  opacity: 0.65;
+}
+
+.muted.small {
+  font-size: 11px;
+}
+
+/* PILL ROW */
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: #181824;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* GAME LIST */
+.search {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid #34344a;
+  background: #10101a;
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 12px;
+  outline: none;
+}
+
+.search:focus {
+  border-color: #e53939;
+}
+
+.game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.game-item {
+  padding: 10px 12px;
+  background: #151522;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.game-info {
+  text-align: left;
+}
+
+.game-info h4 {
+  font-size: 15px;
+}
+
+.game-info p {
+  font-size: 11px;
+  opacity: 0.65;
+  margin-top: 2px;
+}
+
+.game-play-btn {
+  border: none;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: #e53939;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* CHAT */
+.chat-card {
+  display: flex;
+  flex-direction: column;
+  height: 60vh;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 13px;
+  padding-right: 4px;
+}
+
+.chat-msg {
+  margin-bottom: 6px;
+  text-align: left;
+}
+
+.chat-name {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #34344a;
+  background: #10101a;
+  color: #fff;
+  font-size: 13px;
+}
+
+.chat-input-row button {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: none;
+  background: #e53939;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 /* ACHIEVEMENTS */
-.achievement-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
+.ach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.achievement {
-    background: #16161b;
-    padding: 18px;
-    border-radius: 10px;
-    border: 1px solid #252530;
+.ach {
+  background: #151522;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  text-align: left;
+}
+
+.ach-title {
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.ach-desc {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.ach-earned {
+  font-size: 11px;
+  margin-top: 4px;
+  color: #57ff9c;
+}
+
+/* NAVBAR (BOTTOM) */
+.nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(5,5,12,0.97);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  justify-content: space-around;
+  padding: 6px 0 8px;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: #999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 20px;
+  gap: 1px;
+  flex: 1;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.nav-btn span {
+  font-size: 10px;
+}
+
+.nav-btn.active {
+  color: #fff;
+}
+
+/* INNER SCREENS */
+.inner-screen {
+  display: none;
+}
+
+.inner-screen.active {
+  display: block;
+  animation: fadeIn 0.35s ease;
+}
+
+/* BUTTONS */
+button.danger {
+  background: #b51f2b;
+  margin-top: 10px;
+}
+
+/* ANIMATIONS */
+@keyframes popIn {
+  from {
+    transform: scale(0.92);
     opacity: 0;
-    transform: translateY(10px);
-    animation: fadeIn 0.5s forwards;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes fadeIn {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* MOBILE ONLY: lock layout for small screens */
+@media (min-width: 800px) {
+  body {
+    display: flex;
+    justify-content: center;
+    background: radial-gradient(circle at top, #19192a, #050509);
+  }
+  .app, .screen-login {
+    max-width: 480px;
+    margin: auto;
+    border-left: 1px solid #181824;
+    border-right: 1px solid #181824;
+  }
 }
