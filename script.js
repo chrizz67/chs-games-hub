@@ -1,118 +1,276 @@
-// Simple state
-let user = {
-  name: null,
-  pin: null,
-  coins: 0,
-  gamesPlayed: 0,
-  achievementsUnlocked: 0
-};
-
-const STORAGE_KEY = "chs_hub_user_v1";
+// Storage keys
+const USERS_KEY = "chs_hub_users_v1";
+const CURRENT_KEY = "chs_hub_current_user_v1";
 const CHAT_KEY = "chs_hub_chat_v1";
 
-// Load user if exists
-const saved = localStorage.getItem(STORAGE_KEY);
-if (saved) {
-  try {
-    user = JSON.parse(saved);
-  } catch (e) {}
-}
+// Data
+let users = [];
+let currentUser = null;
 
 // Elements
-const loginScreen = document.getElementById("screen-login");
+const screenSignup = document.getElementById("screen-signup");
+const screenLogin = document.getElementById("screen-login");
+const screenDevice = document.getElementById("screen-device");
 const app = document.getElementById("app");
+
+// Auth inputs
+const signupName = document.getElementById("signupName");
+const signupPin = document.getElementById("signupPin");
+const signupPin2 = document.getElementById("signupPin2");
+const signupBtn = document.getElementById("signupBtn");
+const goLogin = document.getElementById("goLogin");
+
 const loginName = document.getElementById("loginName");
 const loginPin = document.getElementById("loginPin");
 const loginBtn = document.getElementById("loginBtn");
+const goSignup = document.getElementById("goSignup");
+
+// Device
+const deviceButtons = document.querySelectorAll(".device-btn");
+
+// App UI
+const navButtons = document.querySelectorAll(".nav-btn");
+const innerScreens = document.querySelectorAll(".inner-screen");
 
 const usernameLabel = document.getElementById("usernameLabel");
+const welcomeText = document.getElementById("welcomeText");
 const coinAmount = document.getElementById("coinAmount");
+
+const homeCoins = document.getElementById("homeCoins");
+const homeGames = document.getElementById("homeGames");
+const homeAch = document.getElementById("homeAch");
+
 const profileName = document.getElementById("profileName");
 const profileCoins = document.getElementById("profileCoins");
 const profileGames = document.getElementById("profileGames");
 const profileAch = document.getElementById("profileAch");
+const profileMode = document.getElementById("profileMode");
+const changeModeBtn = document.getElementById("changeModeBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-const navButtons = document.querySelectorAll(".nav-btn");
-const innerScreens = document.querySelectorAll(".inner-screen");
-
-// Games data (later you can add 500+ here)
+// Games
 const games = [
   { id: "surviv", name: "Surviv.io", desc: "2D battle royale", link: "https://example.com" },
-  { id: "agar", name: "Agar.io", desc: "Cell eating arena", link: "https://example.com" },
+  { id: "agar", name: "Agar.io", desc: "Cell-eating arena", link: "https://example.com" },
   { id: "krunker", name: "Krunker", desc: "Fast FPS browser game", link: "https://example.com" },
   { id: "drift", name: "Drift Hunters", desc: "Car drifting", link: "https://example.com" },
   { id: "runner", name: "Subway Runner", desc: "Endless running", link: "https://example.com" }
 ];
 
-// Achievements base list
+const gameListEl = document.getElementById("gameList");
+const gameSearch = document.getElementById("gameSearch");
+const popularEl = document.getElementById("popularGames");
+
+// Achievements
 const baseAchievements = [
   { id: "login_once", title: "Welcome In", desc: "Logged into the hub for the first time." },
   { id: "play_1", title: "First Game", desc: "Played your first game." },
-  { id: "play_5", title: "Warming Up", desc: "Played 5 games.", threshold: 5 },
+  { id: "play_5", title: "Getting Warm", desc: "Played 5 games.", threshold: 5 },
   { id: "coins_100", title: "Coin Collector", desc: "Reach 100 coins.", threshold: 100 }
 ];
 
-let earnedAchievementIds = new Set();
+const achievementsListEl = document.getElementById("achievementsList");
 
-// --- UTIL ---
-function saveUser() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+// Leaderboard
+const leaderboardEl = document.getElementById("leaderboard");
+
+// Chat
+const chatMessagesEl = document.getElementById("chatMessages");
+const chatInput = document.getElementById("chatInput");
+const chatSend = document.getElementById("chatSend");
+
+// ----- Helpers -----
+function loadUsers() {
+  try {
+    const raw = localStorage.getItem(USERS_KEY);
+    if (raw) users = JSON.parse(raw);
+  } catch (e) {
+    users = [];
+  }
 }
 
-function switchToApp() {
-  loginScreen.classList.add("hidden");
-  app.classList.remove("hidden");
-  updateUI();
+function saveUsers() {
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
 
-// --- LOGIN ---
-loginBtn.addEventListener("click", () => {
-  const name = loginName.value.trim();
-  const pin = loginPin.value.trim();
+function setCurrentUser(u) {
+  currentUser = u;
+  if (u) {
+    localStorage.setItem(CURRENT_KEY, u.username);
+  } else {
+    localStorage.removeItem(CURRENT_KEY);
+  }
+}
 
-  if (!name || pin.length < 4) {
-    alert("Enter a username and a 4-digit PIN.");
+function findUser(username) {
+  return users.find(u => u.username.toLowerCase() === username.toLowerCase());
+}
+
+function updateBodyLayout() {
+  if (!currentUser || !currentUser.deviceMode) {
+    document.body.classList.remove("desktop-mode");
     return;
   }
-
-  user.name = name;
-  user.pin = pin;
-  if (!user.coins) user.coins = 0;
-  saveUser();
-  awardAchievement("login_once");
-  switchToApp();
-});
-
-// Auto login if already saved
-if (user.name && user.pin) {
-  switchToApp();
+  if (currentUser.deviceMode === "desktop") {
+    document.body.classList.add("desktop-mode");
+  } else {
+    document.body.classList.remove("desktop-mode");
+  }
 }
 
-// --- NAV / TABS ---
+// ----- Navigation -----
 navButtons.forEach(btn => {
   btn.addEventListener("click", () => {
-    navButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
+    const target = btn.dataset.target; // e.g. "home"
 
-    const target = btn.dataset.target; // e.g. "games"
-    innerScreens.forEach(scr => {
-      scr.classList.remove("active");
+    navButtons.forEach(b => b.classList.remove("active"));
+    navButtons.forEach(b => {
+      if (b.dataset.target === target) b.classList.add("active");
     });
+
+    innerScreens.forEach(scr => scr.classList.remove("active"));
     const screen = document.getElementById("screen-" + target);
     if (screen) screen.classList.add("active");
   });
 });
 
-// --- UI UPDATE ---
-function updateUI() {
-  usernameLabel.textContent = user.name || "Guest";
-  coinAmount.textContent = user.coins || 0;
+// ----- Auth flow -----
+goLogin.addEventListener("click", () => {
+  screenSignup.classList.add("hidden");
+  screenLogin.classList.remove("hidden");
+});
 
-  profileName.textContent = user.name || "Guest";
-  profileCoins.textContent = user.coins || 0;
-  profileGames.textContent = user.gamesPlayed || 0;
-  profileAch.textContent = user.achievementsUnlocked || 0;
+goSignup.addEventListener("click", () => {
+  screenLogin.classList.add("hidden");
+  screenSignup.classList.remove("hidden");
+});
+
+signupBtn.addEventListener("click", () => {
+  const name = signupName.value.trim();
+  const pin = signupPin.value.trim();
+  const pin2 = signupPin2.value.trim();
+
+  if (!name || pin.length !== 4 || pin2.length !== 4) {
+    alert("Enter a username and 4-digit PIN (twice).");
+    return;
+  }
+  if (pin !== pin2) {
+    alert("PINs do not match.");
+    return;
+  }
+  if (findUser(name)) {
+    alert("Username already exists. Choose another.");
+    return;
+  }
+
+  const newUser = {
+    username: name,
+    pin,
+    coins: 0,
+    gamesPlayed: 0,
+    achievementsUnlocked: 0,
+    earnedAchievements: [],
+    deviceMode: null
+  };
+
+  users.push(newUser);
+  saveUsers();
+  setCurrentUser(newUser);
+
+  // Go to device selection
+  screenSignup.classList.add("hidden");
+  screenDevice.classList.remove("hidden");
+});
+
+loginBtn.addEventListener("click", () => {
+  const name = loginName.value.trim();
+  const pin = loginPin.value.trim();
+
+  if (!name || pin.length !== 4) {
+    alert("Enter username and 4-digit PIN.");
+    return;
+  }
+
+  const u = findUser(name);
+  if (!u) {
+    alert("No account with that username. Please sign up.");
+    screenLogin.classList.add("hidden");
+    screenSignup.classList.remove("hidden");
+    return;
+  }
+
+  if (u.pin !== pin) {
+    alert("Wrong PIN.");
+    return;
+  }
+
+  setCurrentUser(u);
+
+  if (!currentUser.deviceMode) {
+    screenLogin.classList.add("hidden");
+    screenDevice.classList.remove("hidden");
+  } else {
+    enterApp();
+  }
+});
+
+// Device selection
+deviceButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (!currentUser) return;
+    const mode = btn.dataset.mode; // "mobile" or "desktop"
+    currentUser.deviceMode = mode;
+    saveUsers();
+    updateBodyLayout();
+    enterApp();
+  });
+});
+
+changeModeBtn.addEventListener("click", () => {
+  if (!currentUser) return;
+  app.classList.add("hidden");
+  screenDevice.classList.remove("hidden");
+});
+
+// Logout
+logoutBtn.addEventListener("click", () => {
+  if (!confirm("Log out and clear this user progress on this device?")) return;
+  currentUser = null;
+  setCurrentUser(null);
+  updateBodyLayout();
+  app.classList.add("hidden");
+  screenDevice.classList.add("hidden");
+  screenLogin.classList.add("hidden");
+  screenSignup.classList.remove("hidden");
+});
+
+// ----- App entry -----
+function enterApp() {
+  screenSignup.classList.add("hidden");
+  screenLogin.classList.add("hidden");
+  screenDevice.classList.add("hidden");
+  app.classList.remove("hidden");
+  updateBodyLayout();
+  updateUI();
+}
+
+// ----- UI Update -----
+function updateUI() {
+  if (!currentUser) return;
+
+  usernameLabel.textContent = currentUser.username;
+  welcomeText.textContent = `Welcome, ${currentUser.username}.`;
+
+  coinAmount.textContent = currentUser.coins || 0;
+  homeCoins.textContent = currentUser.coins || 0;
+  homeGames.textContent = currentUser.gamesPlayed || 0;
+  homeAch.textContent = currentUser.achievementsUnlocked || 0;
+
+  profileName.textContent = currentUser.username;
+  profileCoins.textContent = currentUser.coins || 0;
+  profileGames.textContent = currentUser.gamesPlayed || 0;
+  profileAch.textContent = currentUser.achievementsUnlocked || 0;
+  profileMode.textContent = currentUser.deviceMode || "mobile";
 
   renderGames();
   renderPopularGames();
@@ -121,10 +279,7 @@ function updateUI() {
   loadChat();
 }
 
-// --- GAMES LIST ---
-const gameListEl = document.getElementById("gameList");
-const gameSearch = document.getElementById("gameSearch");
-
+// ----- Games -----
 function renderGames() {
   const term = (gameSearch.value || "").toLowerCase();
   gameListEl.innerHTML = "";
@@ -147,8 +302,6 @@ function renderGames() {
 
 gameSearch.addEventListener("input", renderGames);
 
-// Popular pills
-const popularEl = document.getElementById("popularGames");
 function renderPopularGames() {
   popularEl.innerHTML = "";
   games.slice(0, 3).forEach(g => {
@@ -160,33 +313,50 @@ function renderPopularGames() {
 }
 
 function playGame(game) {
-  user.gamesPlayed = (user.gamesPlayed || 0) + 1;
-  user.coins = (user.coins || 0) + 5; // +5 coins per play
-  saveUser();
-  awardAchievement("play_1");
-  if (user.gamesPlayed >= 5) awardAchievement("play_5");
-  if (user.coins >= 100) awardAchievement("coins_100");
+  if (!currentUser) return;
+  currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+  currentUser.coins = (currentUser.coins || 0) + 5;
+  checkAchievements();
+  saveUsers();
   updateUI();
 
-  // For now just alert; later we can open real game link/iframe
+  // later we replace example.com with real game URLs
   window.open(game.link, "_blank");
 }
 
-// --- ACHIEVEMENTS ---
-const achievementsListEl = document.getElementById("achievementsList");
+// ----- Achievements -----
+function checkAchievements() {
+  if (!currentUser.earnedAchievements) currentUser.earnedAchievements = [];
 
-function awardAchievement(id) {
-  if (!earnedAchievementIds.has(id)) {
-    earnedAchievementIds.add(id);
-    user.achievementsUnlocked = earnedAchievementIds.size;
-    saveUser();
-  }
+  const earnedSet = new Set(currentUser.earnedAchievements);
+
+  baseAchievements.forEach(a => {
+    if (a.id === "login_once") {
+      // already handled on signup/login if needed
+      return;
+    }
+    if (a.id === "play_1" && currentUser.gamesPlayed >= 1) {
+      earnedSet.add(a.id);
+    }
+    if (a.id === "play_5" && currentUser.gamesPlayed >= 5) {
+      earnedSet.add(a.id);
+    }
+    if (a.id === "coins_100" && currentUser.coins >= 100) {
+      earnedSet.add(a.id);
+    }
+  });
+
+  currentUser.earnedAchievements = Array.from(earnedSet);
+  currentUser.achievementsUnlocked = currentUser.earnedAchievements.length;
 }
 
 function renderAchievements() {
   achievementsListEl.innerHTML = "";
+  if (!currentUser) return;
+  const earnedSet = new Set(currentUser.earnedAchievements || []);
+
   baseAchievements.forEach(a => {
-    const earned = earnedAchievementIds.has(a.id);
+    const earned = earnedSet.has(a.id);
     const div = document.createElement("div");
     div.className = "ach";
     div.innerHTML = `
@@ -198,21 +368,30 @@ function renderAchievements() {
   });
 }
 
-// --- LEADERBOARD (LOCAL ONLY) ---
-const leaderboardEl = document.getElementById("leaderboard");
-function renderLeaderboard() {
-  leaderboardEl.innerHTML = "";
-  // For now we only have current user locally
-  const li = document.createElement("li");
-  li.textContent = `${user.name || "You"} — ${user.coins || 0} coins`;
-  leaderboardEl.appendChild(li);
+// award login_once when they first use the app
+function awardLoginAchievement() {
+  if (!currentUser) return;
+  if (!currentUser.earnedAchievements) currentUser.earnedAchievements = [];
+  if (!currentUser.earnedAchievements.includes("login_once")) {
+    currentUser.earnedAchievements.push("login_once");
+    currentUser.achievementsUnlocked = currentUser.earnedAchievements.length;
+    saveUsers();
+  }
 }
 
-// --- CHAT (LOCAL STORAGE) ---
-const chatMessagesEl = document.getElementById("chatMessages");
-const chatInput = document.getElementById("chatInput");
-const chatSend = document.getElementById("chatSend");
+// ----- Leaderboard (local only) -----
+function renderLeaderboard() {
+  leaderboardEl.innerHTML = "";
+  // sort local users by coins (desc)
+  const sorted = [...users].sort((a, b) => (b.coins || 0) - (a.coins || 0));
+  sorted.slice(0, 5).forEach(u => {
+    const li = document.createElement("li");
+    li.textContent = `${u.username} — ${u.coins || 0} coins`;
+    leaderboardEl.appendChild(li);
+  });
+}
 
+// ----- Chat (local) -----
 function loadChat() {
   chatMessagesEl.innerHTML = "";
   let msgs = [];
@@ -243,12 +422,11 @@ function appendChatMessage(name, text, save = true) {
 
 chatSend.addEventListener("click", () => {
   const text = chatInput.value.trim();
-  if (!text) return;
-  appendChatMessage(user.name || "Anon", text, true);
+  if (!text || !currentUser) return;
+  appendChatMessage(currentUser.username || "Anon", text, true);
   chatInput.value = "";
 });
 
-// send on Enter
 chatInput.addEventListener("keydown", e => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -256,19 +434,32 @@ chatInput.addEventListener("keydown", e => {
   }
 });
 
-// --- LOGOUT ---
-logoutBtn.addEventListener("click", () => {
-  if (!confirm("Log out and clear local data?")) return;
-  localStorage.removeItem(STORAGE_KEY);
-  // keep chat history but reset user
-  user = { name: null, pin: null, coins: 0, gamesPlayed: 0, achievementsUnlocked: 0 };
-  // Go back to login
-  app.classList.add("hidden");
-  loginScreen.classList.remove("hidden");
-});
+// ----- Init -----
+function init() {
+  loadUsers();
+  const currentName = localStorage.getItem(CURRENT_KEY);
+  if (currentName) {
+    const u = findUser(currentName);
+    if (u) {
+      setCurrentUser(u);
+      if (!currentUser.deviceMode) {
+        // go to device selection
+        screenSignup.classList.add("hidden");
+        screenLogin.classList.add("hidden");
+        screenDevice.classList.remove("hidden");
+      } else {
+        enterApp();
+      }
+      awardLoginAchievement();
+      saveUsers();
+      updateUI();
+      return;
+    }
+  }
 
-// initial UI
-if (user.name && user.pin) {
-  // already switched to app above
-  updateUI();
+  // no user => show signup by default
+  screenSignup.classList.remove("hidden");
+  screenLogin.classList.add("hidden");
 }
+
+init();
