@@ -10,7 +10,7 @@ body {
   color: #fff;
 }
 
-/* UTILS */
+/* GLOBAL FLAGS */
 .hidden {
   display: none !important;
 }
@@ -22,6 +22,118 @@ body {
 
 .muted.small {
   font-size: 11px;
+}
+
+/* LOADER (CHS BEAVER) */
+.loader-screen {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #2a1018, #050507);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.beaver-wrap {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  animation: floatBeaver 1.4s ease-in-out infinite;
+}
+
+.beaver-head {
+  position: absolute;
+  inset: 10px;
+  background: #5b3626;
+  border-radius: 60% 60% 50% 50%;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.6);
+}
+
+.beaver-ear {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background: #5b3626;
+  border-radius: 50%;
+  top: -8px;
+}
+
+.ear-left {
+  left: 10px;
+}
+
+.ear-right {
+  right: 10px;
+}
+
+.beaver-face {
+  position: absolute;
+  inset: 18px 12px 12px;
+}
+
+.beaver-eye {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #000;
+  border-radius: 50%;
+  top: 6px;
+}
+
+.eye-left {
+  left: 10px;
+}
+
+.eye-right {
+  right: 10px;
+}
+
+.beaver-eye::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+  top: 1px;
+  left: 1px;
+}
+
+.beaver-teeth {
+  position: absolute;
+  width: 22px;
+  height: 14px;
+  background: #f5f5f5;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.2) inset;
+}
+
+.beaver-teeth::before {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: rgba(0,0,0,0.2);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.loader-text {
+  margin-top: 16px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+@keyframes floatBeaver {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 /* AUTH SCREENS */
@@ -139,6 +251,12 @@ body {
   border-radius: 8px;
 }
 
+.dev-icon.tablet {
+  width: 26px;
+  height: 30px;
+  border-radius: 6px;
+}
+
 .dev-icon.desktop {
   width: 30px;
   border-radius: 4px;
@@ -151,7 +269,7 @@ body {
   flex-direction: column;
 }
 
-/* DESKTOP MODE */
+/* DESKTOP SIDEBAR */
 .sidebar-nav {
   display: none;
   width: 210px;
@@ -407,7 +525,7 @@ body {
   color: #57ff9c;
 }
 
-/* NAV (MOBILE BOTTOM) + SIDEBAR BUTTONS */
+/* NAV (BOTTOM FOR MOBILE/TABLET) + SIDEBAR BTNS */
 .nav {
   position: fixed;
   bottom: 0;
@@ -441,7 +559,6 @@ body {
   border: 2px solid transparent;
 }
 
-/* ICON STYLES */
 .nav-icon.home {
   border-color: #e53939;
 }
@@ -474,7 +591,7 @@ body {
   box-shadow: 0 0 10px rgba(229, 57, 57, 0.7);
 }
 
-/* SIDEBAR BUTTONS */
+/* SIDEBAR BUTTONS (DESKTOP) */
 .nav-btn.side {
   flex-direction: row;
   justify-content: flex-start;
@@ -484,6 +601,7 @@ body {
   border-radius: 12px;
 }
 
+/* show label bigger in sidebar */
 .nav-btn.side .nav-label {
   font-size: 13px;
 }
@@ -555,7 +673,7 @@ button.ghost {
   }
 }
 
-/* DESKTOP LAYOUT: if we later add body.desktop-mode */
+/* DESKTOP LAYOUT (sidebar) */
 @media (min-width: 900px) {
   body.desktop-mode {
     display: flex;
@@ -581,9 +699,45 @@ button.ghost {
   body.desktop-mode .nav {
     display: none;
   }
+
+  body.desktop-mode .game-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  body.desktop-mode .game-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
-/* center app on large desktop even in mobile mode */
+/* TABLET LAYOUT (bottom nav, multi-column games) */
+@media (min-width: 700px) and (max-width: 1024px) {
+  body.tablet-mode .app {
+    max-width: 720px;
+    margin: 0 auto;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  body.tablet-mode .game-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  body.tablet-mode .game-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  body.tablet-mode .nav-btn {
+    font-size: 14px;
+  }
+}
+
+/* MOBILE / DEFAULT CONTAINER CENTER ON BIG SCREENS */
 @media (min-width: 900px) {
   body:not(.desktop-mode) .app {
     max-width: 480px;
