@@ -8,8 +8,24 @@
 </head>
 <body>
 
+  <!-- LOADING SCREEN (CHS BEAVER) -->
+  <div id="loader" class="loader-screen">
+    <div class="beaver-wrap">
+      <div class="beaver-head">
+        <div class="beaver-ear ear-left"></div>
+        <div class="beaver-ear ear-right"></div>
+        <div class="beaver-face">
+          <div class="beaver-eye eye-left"></div>
+          <div class="beaver-eye eye-right"></div>
+          <div class="beaver-teeth"></div>
+        </div>
+      </div>
+    </div>
+    <p class="loader-text">Loading CHS Hub...</p>
+  </div>
+
   <!-- SIGN UP SCREEN -->
-  <div id="screen-signup" class="screen">
+  <div id="screen-signup" class="screen hidden">
     <div class="auth-card">
       <h1>Create account</h1>
       <p class="sub">Make a user so your stats save on this device.</p>
@@ -49,6 +65,10 @@
         <button class="device-btn" data-mode="mobile">
           <div class="dev-icon phone"></div>
           <span>Mobile</span>
+        </button>
+        <button class="device-btn" data-mode="tablet">
+          <div class="dev-icon tablet"></div>
+          <span>Tablet</span>
         </button>
         <button class="device-btn" data-mode="desktop">
           <div class="dev-icon desktop"></div>
@@ -191,7 +211,7 @@
       </section>
     </div>
 
-    <!-- MOBILE BOTTOM NAV -->
+    <!-- MOBILE/TABLET BOTTOM NAV -->
     <nav class="nav">
       <button class="nav-btn bottom active" data-target="home">
         <span class="nav-icon home"></span>
