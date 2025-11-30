@@ -8,57 +8,149 @@
 </head>
 <body>
 
+  <!-- SIGN UP SCREEN -->
+  <div id="screen-signup" class="screen">
+    <div class="auth-card">
+      <h1>Create account</h1>
+      <p class="sub">Make a user so your stats save on this device.</p>
+
+      <input id="signupName" type="text" placeholder="Username" />
+      <input id="signupPin" type="password" placeholder="PIN (4 digits)" maxlength="4" />
+      <input id="signupPin2" type="password" placeholder="Confirm PIN" maxlength="4" />
+
+      <button id="signupBtn">Sign up</button>
+
+      <p class="small switch-link" id="goLogin">Already have an account? Log in</p>
+    </div>
+  </div>
+
   <!-- LOGIN SCREEN -->
-  <div id="screen-login" class="screen active">
-    <div class="login-card">
-      <h1>Welcome</h1>
-      <p class="sub">Sign in to your hub</p>
+  <div id="screen-login" class="screen hidden">
+    <div class="auth-card">
+      <h1>Log in</h1>
+      <p class="sub">Enter your username and PIN.</p>
+
       <input id="loginName" type="text" placeholder="Username" />
       <input id="loginPin" type="password" placeholder="PIN (4 digits)" maxlength="4" />
-      <button id="loginBtn">Continue</button>
-      <p class="small">Your progress is saved on this device.</p>
+
+      <button id="loginBtn">Log in</button>
+
+      <p class="small switch-link" id="goSignup">Need an account? Sign up</p>
+    </div>
+  </div>
+
+  <!-- DEVICE MODE SCREEN -->
+  <div id="screen-device" class="screen hidden">
+    <div class="auth-card">
+      <h1>Device mode</h1>
+      <p class="sub">How do you mainly use this hub?</p>
+
+      <div class="device-row">
+        <button class="device-btn" data-mode="mobile">
+          <div class="dev-icon phone"></div>
+          <span>Mobile</span>
+        </button>
+        <button class="device-btn" data-mode="desktop">
+          <div class="dev-icon desktop"></div>
+          <span>Desktop</span>
+        </button>
+      </div>
+
+      <p class="small">You can change this later in Profile → Settings.</p>
     </div>
   </div>
 
   <!-- MAIN APP -->
   <div id="app" class="app hidden">
-    <!-- MAIN CONTENT -->
-    <div class="main">
 
-      <!-- HOME / DASHBOARD -->
+    <!-- DESKTOP SIDEBAR NAV -->
+    <aside class="sidebar-nav">
+      <div class="sidebar-title">Hub</div>
+      <button class="nav-btn side active" data-target="home">
+        <span class="nav-icon home"></span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn side" data-target="games">
+        <span class="nav-icon games"></span>
+        <span class="nav-label">Games</span>
+      </button>
+      <button class="nav-btn side" data-target="chat">
+        <span class="nav-icon chat"></span>
+        <span class="nav-label">Chat</span>
+      </button>
+      <button class="nav-btn side" data-target="achievements">
+        <span class="nav-icon trophy"></span>
+        <span class="nav-label">Achievements</span>
+      </button>
+      <button class="nav-btn side" data-target="profile">
+        <span class="nav-icon user"></span>
+        <span class="nav-label">Profile</span>
+      </button>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <div class="main">
+      <!-- HOME -->
       <section id="screen-home" class="inner-screen active">
-        <h2 class="title">Dashboard</h2>
+        <header class="topbar">
+          <div>
+            <h2>Dashboard</h2>
+            <p class="muted" id="welcomeText">Welcome.</p>
+          </div>
+          <div class="top-coins">
+            <span id="coinAmount">0</span>
+            <span class="coin-dot"></span>
+          </div>
+        </header>
+
         <div class="card big">
           <div class="card-header">
-            <span>Coins</span>
+            <span>Overview</span>
             <span id="usernameLabel"></span>
           </div>
-          <div class="coins-display"><span id="coinAmount">0</span> 🪙</div>
-          <p class="muted">Earn coins by playing games and unlocking achievements.</p>
+          <div class="overview-row">
+            <div class="stat-box">
+              <div class="stat-label">Coins</div>
+              <div class="stat-value" id="homeCoins">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Games played</div>
+              <div class="stat-value" id="homeGames">0</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Achievements</div>
+              <div class="stat-value" id="homeAch">0</div>
+            </div>
+          </div>
+          <p class="muted small">Play games and unlock achievements to climb the leaderboard.</p>
         </div>
 
         <div class="card">
-          <h3>Popular Today</h3>
+          <h3>Popular today</h3>
           <div id="popularGames" class="pill-row"></div>
         </div>
 
         <div class="card">
-          <h3>Leaderboard (local)</h3>
+          <h3>Local leaderboard</h3>
           <ol id="leaderboard"></ol>
-          <p class="muted small">Real online leaderboard can be added later.</p>
+          <p class="muted small">Later we can make this a real online leaderboard.</p>
         </div>
       </section>
 
       <!-- GAMES -->
       <section id="screen-games" class="inner-screen">
-        <h2 class="title">Games</h2>
+        <header class="topbar small">
+          <h2>Games</h2>
+        </header>
         <input id="gameSearch" class="search" type="text" placeholder="Search games..." />
         <div id="gameList" class="game-list"></div>
       </section>
 
       <!-- CHAT -->
       <section id="screen-chat" class="inner-screen">
-        <h2 class="title">Chat</h2>
+        <header class="topbar small">
+          <h2>Chat</h2>
+        </header>
         <div class="card chat-card">
           <div id="chatMessages" class="chat-messages"></div>
           <div class="chat-input-row">
@@ -66,36 +158,61 @@
             <button id="chatSend">Send</button>
           </div>
         </div>
-        <p class="muted small">Right now chat is saved on this device only. Later we can make it global.</p>
+        <p class="muted small">Right now this chat only saves on this device. Later we can make it global.</p>
       </section>
 
       <!-- ACHIEVEMENTS -->
       <section id="screen-achievements" class="inner-screen">
-        <h2 class="title">Achievements</h2>
+        <header class="topbar small">
+          <h2>Achievements</h2>
+        </header>
         <div id="achievementsList" class="ach-list"></div>
       </section>
 
       <!-- PROFILE -->
       <section id="screen-profile" class="inner-screen">
-        <h2 class="title">Profile</h2>
+        <header class="topbar small">
+          <h2>Profile</h2>
+        </header>
         <div class="card">
           <p><strong>User:</strong> <span id="profileName"></span></p>
           <p><strong>Total coins:</strong> <span id="profileCoins">0</span></p>
           <p><strong>Games played:</strong> <span id="profileGames">0</span></p>
           <p><strong>Achievements unlocked:</strong> <span id="profileAch">0</span></p>
+          <p><strong>Device mode:</strong> <span id="profileMode">-</span></p>
         </div>
+
+        <div class="card">
+          <h3>Settings</h3>
+          <button id="changeModeBtn" class="ghost">Change device mode</button>
+        </div>
+
         <button id="logoutBtn" class="danger">Log out</button>
       </section>
-
     </div>
 
-    <!-- BOTTOM NAV -->
+    <!-- MOBILE BOTTOM NAV -->
     <nav class="nav">
-      <button class="nav-btn active" data-target="home">🏠<span>Home</span></button>
-      <button class="nav-btn" data-target="games">🎮<span>Games</span></button>
-      <button class="nav-btn" data-target="chat">💬<span>Chat</span></button>
-      <button class="nav-btn" data-target="achievements">🏆<span>Ach</span></button>
-      <button class="nav-btn" data-target="profile">👤<span>Profile</span></button>
+      <button class="nav-btn bottom active" data-target="home">
+        <span class="nav-icon home"></span>
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-btn bottom" data-target="games">
+        <span class="nav-icon games"></span>
+        <span class="nav-label">Games</span>
+      </button>
+      <button class="nav-btn bottom" data-target="chat">
+        <span class="nav-icon chat"></span>
+        <span class="nav-label">Chat</span>
+      </button>
+      <button class="nav-btn bottom" data-target="achievements">
+        <span class="nav-icon trophy"></span>
+        <span class="nav-label">Ach</span>
+      </button>
+      <button class="nav-btn bottom" data-target="profile">
+        <span class="nav-icon user"></span>
+        <span class="nav-label">Profile</span>
+      </button>
     </nav>
   </div>
 
