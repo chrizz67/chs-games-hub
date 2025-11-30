@@ -50,18 +50,19 @@ const profileMode = document.getElementById("profileMode");
 const changeModeBtn = document.getElementById("changeModeBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
-// Games
-const games = [
-  { id: "surviv", name: "Surviv.io", desc: "2D battle royale", link: "https://example.com" },
-  { id: "agar", name: "Agar.io", desc: "Cell-eating arena", link: "https://example.com" },
-  { id: "krunker", name: "Krunker", desc: "Fast FPS browser game", link: "https://example.com" },
-  { id: "drift", name: "Drift Hunters", desc: "Car drifting", link: "https://example.com" },
-  { id: "runner", name: "Subway Runner", desc: "Endless running", link: "https://example.com" }
-];
-
+// GAMES UI
 const gameListEl = document.getElementById("gameList");
 const gameSearch = document.getElementById("gameSearch");
 const popularEl = document.getElementById("popularGames");
+const gamesTabs = document.querySelectorAll(".games-tab");
+const gamesCategoriesEl = document.getElementById("gamesCategories");
+
+// GAME OVERLAY (internal fullscreen)
+const gameOverlay = document.getElementById("gameOverlay");
+const gameFrame = document.getElementById("gameFrame");
+const gameTitleEl = document.getElementById("gameTitle");
+const gameBackBtn = document.getElementById("gameBackBtn");
+const gameFullscreenBtn = document.getElementById("gameFullscreenBtn");
 
 // Achievements
 const baseAchievements = [
@@ -80,6 +81,84 @@ const leaderboardEl = document.getElementById("leaderboard");
 const chatMessagesEl = document.getElementById("chatMessages");
 const chatInput = document.getElementById("chatInput");
 const chatSend = document.getElementById("chatSend");
+
+// ----- GAME DATA -----
+// Internal games: these expect files in /internal-games/...
+// Example: /internal-games/hextris/index.html
+const internalGames = [
+  {
+    id: "hextris",
+    name: "Hextris",
+    desc: "Fast falling-block puzzle.",
+    category: "Puzzle",
+    link: "/internal-games/hextris/index.html"
+  },
+  {
+    id: "space-blaster",
+    name: "Space Blaster",
+    desc: "Arcade space shooter.",
+    category: "Action",
+    link: "/internal-games/space-blaster/index.html"
+  },
+  {
+    id: "street-racer",
+    name: "Street Racer",
+    desc: "Top-down racing game.",
+    category: "Racing",
+    link: "/internal-games/street-racer/index.html"
+  },
+  {
+    id: "tower-defense",
+    name: "Mini TD",
+    desc: "Simple tower defense.",
+    category: "Strategy",
+    link: "/internal-games/mini-td/index.html"
+  },
+  {
+    id: "platformer-demo",
+    name: "Pixel Runner",
+    desc: "Classic platformer demo.",
+    category: "Platformer",
+    link: "/internal-games/pixel-runner/index.html"
+  }
+  // later we can add 50+ more here
+];
+
+// External games: big titles you can’t self-host
+const externalGames = [
+  {
+    id: "krunker",
+    name: "Krunker",
+    desc: "Fast-paced FPS IO game.",
+    category: "FPS",
+    link: "https://krunker.io"
+  },
+  {
+    id: "1v1lol",
+    name: "1v1.lol",
+    desc: "Build and fight 1v1.",
+    category: "Battle Royale",
+    link: "https://1v1.lol"
+  },
+  {
+    id: "shellshock",
+    name: "Shell Shockers",
+    desc: "Egg-based online FPS.",
+    category: "FPS",
+    link: "https://shellshock.io"
+  },
+  {
+    id: "survivio",
+    name: "Surviv.io",
+    desc: "2D battle royale.",
+    category: "Battle Royale",
+    link: "https://surviv.io"
+  }
+];
+
+// state for games UI
+let currentSource = "internal"; // "internal" or "external"
+let currentCategory = "all";
 
 // ----- Helpers -----
 function loadUsers() {
@@ -109,9 +188,7 @@ function findUser(username) {
 }
 
 function updateBodyLayout() {
-  // Clear all mode flags
   document.body.classList.remove("mobile-mode", "tablet-mode", "desktop-mode");
-
   if (!currentUser || !currentUser.deviceMode) return;
 
   if (currentUser.deviceMode === "desktop") {
@@ -119,7 +196,6 @@ function updateBodyLayout() {
   } else if (currentUser.deviceMode === "tablet") {
     document.body.classList.add("tablet-mode");
   } else {
-    // default to mobile
     document.body.classList.add("mobile-mode");
   }
 }
@@ -127,7 +203,7 @@ function updateBodyLayout() {
 // ----- NAV / TABS -----
 navButtons.forEach(btn => {
   btn.addEventListener("click", () => {
-    const target = btn.dataset.target; // "home", "games", etc.
+    const target = btn.dataset.target;
 
     navButtons.forEach(b => b.classList.remove("active"));
     navButtons.forEach(b => {
@@ -285,12 +361,48 @@ function updateUI() {
   loadChat();
 }
 
-// ----- GAMES -----
+// ----- GAMES LOGIC -----
+function getCurrentGames() {
+  return currentSource === "internal" ? internalGames : externalGames;
+}
+
+function buildCategories() {
+  const games = getCurrentGames();
+  const cats = new Set();
+  games.forEach(g => cats.add(g.category || "Other"));
+  gamesCategoriesEl.innerHTML = "";
+
+  const allPill = document.createElement("button");
+  allPill.className = "cat-pill" + (currentCategory === "all" ? " active" : "");
+  allPill.textContent = "All";
+  allPill.addEventListener("click", () => {
+    currentCategory = "all";
+    buildCategories();
+    renderGames();
+  });
+  gamesCategoriesEl.appendChild(allPill);
+
+  cats.forEach(cat => {
+    const pill = document.createElement("button");
+    pill.className = "cat-pill" + (currentCategory === cat ? " active" : "");
+    pill.textContent = cat;
+    pill.addEventListener("click", () => {
+      currentCategory = cat;
+      buildCategories();
+      renderGames();
+    });
+    gamesCategoriesEl.appendChild(pill);
+  });
+}
+
 function renderGames() {
+  const games = getCurrentGames();
   const term = (gameSearch.value || "").toLowerCase();
   gameListEl.innerHTML = "";
+
   games
     .filter(g => g.name.toLowerCase().includes(term))
+    .filter(g => currentCategory === "all" || g.category === currentCategory)
     .forEach(game => {
       const row = document.createElement("div");
       row.className = "game-item";
@@ -298,19 +410,38 @@ function renderGames() {
         <div class="game-info">
           <h4>${game.name}</h4>
           <p>${game.desc}</p>
+          <div class="game-meta">${currentSource === "internal" ? "Internal" : "External"} • ${game.category || ""}</div>
         </div>
         <button class="game-play-btn">Play</button>
       `;
-      row.querySelector(".game-play-btn").addEventListener("click", () => playGame(game));
+      const btn = row.querySelector(".game-play-btn");
+      if (currentSource === "internal") {
+        btn.addEventListener("click", () => playInternalGame(game));
+      } else {
+        btn.addEventListener("click", () => playExternalGame(game));
+      }
       gameListEl.appendChild(row);
     });
 }
 
 gameSearch.addEventListener("input", renderGames);
 
+// tabs: internal / external
+gamesTabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    gamesTabs.forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    currentSource = tab.dataset.source; // internal or external
+    currentCategory = "all";
+    buildCategories();
+    renderGames();
+  });
+});
+
 function renderPopularGames() {
   popularEl.innerHTML = "";
-  games.slice(0, 3).forEach(g => {
+  const games = internalGames.concat(externalGames).slice(0, 5);
+  games.forEach(g => {
     const pill = document.createElement("div");
     pill.className = "pill";
     pill.textContent = g.name;
@@ -318,22 +449,66 @@ function renderPopularGames() {
   });
 }
 
-function playGame(game) {
+// game stats shared
+function onGamePlayed() {
   if (!currentUser) return;
   currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
   currentUser.coins = (currentUser.coins || 0) + 5;
   checkAchievements();
   saveUsers();
   updateUI();
+}
 
-  // later replace example.com with real game URLs
+// internal game uses overlay + fullscreen option
+function playInternalGame(game) {
+  if (!currentUser) return;
+  onGamePlayed();
+  openGameOverlay(game);
+}
+
+// external game opens in new tab
+function playExternalGame(game) {
+  if (!currentUser) return;
+  onGamePlayed();
   window.open(game.link, "_blank");
 }
+
+// ----- GAME OVERLAY -----
+function openGameOverlay(game) {
+  gameTitleEl.textContent = game.name;
+  // clear first so old game stops
+  gameFrame.src = "";
+  gameOverlay.classList.remove("hidden");
+  // slight delay for smoother transition
+  setTimeout(() => {
+    gameFrame.src = game.link;
+  }, 50);
+}
+
+function closeGameOverlay() {
+  gameFrame.src = "";
+  gameOverlay.classList.add("hidden");
+}
+
+gameBackBtn.addEventListener("click", closeGameOverlay);
+
+// Fullscreen simple (F1 style)
+gameFullscreenBtn.addEventListener("click", () => {
+  const elem = gameFrame;
+  if (elem.requestFullscreen) {
+    elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) {
+    elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) {
+    elem.msRequestFullscreen();
+  } else {
+    alert("Fullscreen not supported on this device/browser.");
+  }
+});
 
 // ----- ACHIEVEMENTS -----
 function checkAchievements() {
   if (!currentUser.earnedAchievements) currentUser.earnedAchievements = [];
-
   const earnedSet = new Set(currentUser.earnedAchievements);
 
   baseAchievements.forEach(a => {
@@ -450,8 +625,8 @@ function init() {
       } else {
         enterApp();
       }
-      // hide loader after setting up UI
       if (loaderScreen) loaderScreen.classList.add("hidden");
+      buildCategories();
       return;
     }
   }
@@ -459,8 +634,8 @@ function init() {
   // no user yet
   screenSignup.classList.remove("hidden");
   screenLogin.classList.add("hidden");
-  // hide loader now that first screen is chosen
   if (loaderScreen) loaderScreen.classList.add("hidden");
+  buildCategories();
 }
 
 init();
