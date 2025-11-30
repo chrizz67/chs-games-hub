@@ -8,6 +8,8 @@ let users = [];
 let currentUser = null;
 
 // Elements
+const loaderScreen = document.getElementById("loader");
+
 const screenSignup = document.getElementById("screen-signup");
 const screenLogin = document.getElementById("screen-login");
 const screenDevice = document.getElementById("screen-device");
@@ -107,21 +109,25 @@ function findUser(username) {
 }
 
 function updateBodyLayout() {
-  if (!currentUser || !currentUser.deviceMode) {
-    document.body.classList.remove("desktop-mode");
-    return;
-  }
+  // Clear all mode flags
+  document.body.classList.remove("mobile-mode", "tablet-mode", "desktop-mode");
+
+  if (!currentUser || !currentUser.deviceMode) return;
+
   if (currentUser.deviceMode === "desktop") {
     document.body.classList.add("desktop-mode");
+  } else if (currentUser.deviceMode === "tablet") {
+    document.body.classList.add("tablet-mode");
   } else {
-    document.body.classList.remove("desktop-mode");
+    // default to mobile
+    document.body.classList.add("mobile-mode");
   }
 }
 
-// ----- Navigation -----
+// ----- NAV / TABS -----
 navButtons.forEach(btn => {
   btn.addEventListener("click", () => {
-    const target = btn.dataset.target; // e.g. "home"
+    const target = btn.dataset.target; // "home", "games", etc.
 
     navButtons.forEach(b => b.classList.remove("active"));
     navButtons.forEach(b => {
@@ -134,7 +140,7 @@ navButtons.forEach(btn => {
   });
 });
 
-// ----- Auth flow -----
+// ----- AUTH FLOW -----
 goLogin.addEventListener("click", () => {
   screenSignup.classList.add("hidden");
   screenLogin.classList.remove("hidden");
@@ -177,7 +183,6 @@ signupBtn.addEventListener("click", () => {
   saveUsers();
   setCurrentUser(newUser);
 
-  // Go to device selection
   screenSignup.classList.add("hidden");
   screenDevice.classList.remove("hidden");
 });
@@ -218,7 +223,7 @@ loginBtn.addEventListener("click", () => {
 deviceButtons.forEach(btn => {
   btn.addEventListener("click", () => {
     if (!currentUser) return;
-    const mode = btn.dataset.mode; // "mobile" or "desktop"
+    const mode = btn.dataset.mode; // "mobile", "tablet", "desktop"
     currentUser.deviceMode = mode;
     saveUsers();
     updateBodyLayout();
@@ -244,17 +249,18 @@ logoutBtn.addEventListener("click", () => {
   screenSignup.classList.remove("hidden");
 });
 
-// ----- App entry -----
+// ----- APP ENTRY -----
 function enterApp() {
   screenSignup.classList.add("hidden");
   screenLogin.classList.add("hidden");
   screenDevice.classList.add("hidden");
   app.classList.remove("hidden");
   updateBodyLayout();
+  awardLoginAchievement();
+  saveUsers();
   updateUI();
 }
 
-// ----- UI Update -----
 function updateUI() {
   if (!currentUser) return;
 
@@ -279,7 +285,7 @@ function updateUI() {
   loadChat();
 }
 
-// ----- Games -----
+// ----- GAMES -----
 function renderGames() {
   const term = (gameSearch.value || "").toLowerCase();
   gameListEl.innerHTML = "";
@@ -320,21 +326,18 @@ function playGame(game) {
   saveUsers();
   updateUI();
 
-  // later we replace example.com with real game URLs
+  // later replace example.com with real game URLs
   window.open(game.link, "_blank");
 }
 
-// ----- Achievements -----
+// ----- ACHIEVEMENTS -----
 function checkAchievements() {
   if (!currentUser.earnedAchievements) currentUser.earnedAchievements = [];
 
   const earnedSet = new Set(currentUser.earnedAchievements);
 
   baseAchievements.forEach(a => {
-    if (a.id === "login_once") {
-      // already handled on signup/login if needed
-      return;
-    }
+    if (a.id === "login_once") return;
     if (a.id === "play_1" && currentUser.gamesPlayed >= 1) {
       earnedSet.add(a.id);
     }
@@ -368,21 +371,18 @@ function renderAchievements() {
   });
 }
 
-// award login_once when they first use the app
 function awardLoginAchievement() {
   if (!currentUser) return;
   if (!currentUser.earnedAchievements) currentUser.earnedAchievements = [];
   if (!currentUser.earnedAchievements.includes("login_once")) {
     currentUser.earnedAchievements.push("login_once");
     currentUser.achievementsUnlocked = currentUser.earnedAchievements.length;
-    saveUsers();
   }
 }
 
-// ----- Leaderboard (local only) -----
+// ----- LEADERBOARD (LOCAL ONLY) -----
 function renderLeaderboard() {
   leaderboardEl.innerHTML = "";
-  // sort local users by coins (desc)
   const sorted = [...users].sort((a, b) => (b.coins || 0) - (a.coins || 0));
   sorted.slice(0, 5).forEach(u => {
     const li = document.createElement("li");
@@ -391,7 +391,7 @@ function renderLeaderboard() {
   });
 }
 
-// ----- Chat (local) -----
+// ----- CHAT (LOCAL STORAGE) -----
 function loadChat() {
   chatMessagesEl.innerHTML = "";
   let msgs = [];
@@ -434,32 +434,33 @@ chatInput.addEventListener("keydown", e => {
   }
 });
 
-// ----- Init -----
+// ----- INIT -----
 function init() {
   loadUsers();
+
   const currentName = localStorage.getItem(CURRENT_KEY);
   if (currentName) {
     const u = findUser(currentName);
     if (u) {
       setCurrentUser(u);
       if (!currentUser.deviceMode) {
-        // go to device selection
         screenSignup.classList.add("hidden");
         screenLogin.classList.add("hidden");
         screenDevice.classList.remove("hidden");
       } else {
         enterApp();
       }
-      awardLoginAchievement();
-      saveUsers();
-      updateUI();
+      // hide loader after setting up UI
+      if (loaderScreen) loaderScreen.classList.add("hidden");
       return;
     }
   }
 
-  // no user => show signup by default
+  // no user yet
   screenSignup.classList.remove("hidden");
   screenLogin.classList.add("hidden");
+  // hide loader now that first screen is chosen
+  if (loaderScreen) loaderScreen.classList.add("hidden");
 }
 
 init();
