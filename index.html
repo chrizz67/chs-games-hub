@@ -1,41 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHS Hub</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hub</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-    <div class="navbar">
-        <h1>HUB</h1>
-        <div class="coins-box">
-            <span id="coinAmount">0</span> 🪙
+  <!-- LOGIN SCREEN -->
+  <div id="screen-login" class="screen active">
+    <div class="login-card">
+      <h1>Welcome</h1>
+      <p class="sub">Sign in to your hub</p>
+      <input id="loginName" type="text" placeholder="Username" />
+      <input id="loginPin" type="password" placeholder="PIN (4 digits)" maxlength="4" />
+      <button id="loginBtn">Continue</button>
+      <p class="small">Your progress is saved on this device.</p>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="app" class="app hidden">
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+      <!-- HOME / DASHBOARD -->
+      <section id="screen-home" class="inner-screen active">
+        <h2 class="title">Dashboard</h2>
+        <div class="card big">
+          <div class="card-header">
+            <span>Coins</span>
+            <span id="usernameLabel"></span>
+          </div>
+          <div class="coins-display"><span id="coinAmount">0</span> 🪙</div>
+          <p class="muted">Earn coins by playing games and unlocking achievements.</p>
         </div>
+
+        <div class="card">
+          <h3>Popular Today</h3>
+          <div id="popularGames" class="pill-row"></div>
+        </div>
+
+        <div class="card">
+          <h3>Leaderboard (local)</h3>
+          <ol id="leaderboard"></ol>
+          <p class="muted small">Real online leaderboard can be added later.</p>
+        </div>
+      </section>
+
+      <!-- GAMES -->
+      <section id="screen-games" class="inner-screen">
+        <h2 class="title">Games</h2>
+        <input id="gameSearch" class="search" type="text" placeholder="Search games..." />
+        <div id="gameList" class="game-list"></div>
+      </section>
+
+      <!-- CHAT -->
+      <section id="screen-chat" class="inner-screen">
+        <h2 class="title">Chat</h2>
+        <div class="card chat-card">
+          <div id="chatMessages" class="chat-messages"></div>
+          <div class="chat-input-row">
+            <input id="chatInput" type="text" placeholder="Type a message..." />
+            <button id="chatSend">Send</button>
+          </div>
+        </div>
+        <p class="muted small">Right now chat is saved on this device only. Later we can make it global.</p>
+      </section>
+
+      <!-- ACHIEVEMENTS -->
+      <section id="screen-achievements" class="inner-screen">
+        <h2 class="title">Achievements</h2>
+        <div id="achievementsList" class="ach-list"></div>
+      </section>
+
+      <!-- PROFILE -->
+      <section id="screen-profile" class="inner-screen">
+        <h2 class="title">Profile</h2>
+        <div class="card">
+          <p><strong>User:</strong> <span id="profileName"></span></p>
+          <p><strong>Total coins:</strong> <span id="profileCoins">0</span></p>
+          <p><strong>Games played:</strong> <span id="profileGames">0</span></p>
+          <p><strong>Achievements unlocked:</strong> <span id="profileAch">0</span></p>
+        </div>
+        <button id="logoutBtn" class="danger">Log out</button>
+      </section>
+
     </div>
 
-    <div class="container">
-        <h2>Games</h2>
-        <div class="game-grid">
-            <div class="game-card" onclick="openGame('cookie')">
-                <h3>Cookie Clicker</h3>
-            </div>
+    <!-- BOTTOM NAV -->
+    <nav class="nav">
+      <button class="nav-btn active" data-target="home">🏠<span>Home</span></button>
+      <button class="nav-btn" data-target="games">🎮<span>Games</span></button>
+      <button class="nav-btn" data-target="chat">💬<span>Chat</span></button>
+      <button class="nav-btn" data-target="achievements">🏆<span>Ach</span></button>
+      <button class="nav-btn" data-target="profile">👤<span>Profile</span></button>
+    </nav>
+  </div>
 
-            <div class="game-card" onclick="openGame('runner')">
-                <h3>Endless Runner</h3>
-            </div>
-
-            <div class="game-card" onclick="openGame('idle')">
-                <h3>Idle Miner</h3>
-            </div>
-        </div>
-
-        <h2>Achievements</h2>
-        <div class="achievement-grid" id="achievementList"></div>
-
-    </div>
-
-    <script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
