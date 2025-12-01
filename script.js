@@ -114,12 +114,17 @@ let settings = {
 let activities = []; // recent activity feed
 let currentSource = "internal"; // internal / external
 let currentCategory = "all";
+
+// Firebase hooks (optional)
 let firebaseEnabled = false;
 let db = null;
 let globalChatUnsub = null;
 let globalLbUnsub = null;
 
-// Achievements definition (a few examples, can be expanded)
+// for v9 helpers if you decide to wire them this way later
+let fsHelpers = null;
+
+// Achievements definition
 const achievementsDef = [
   { id: "login_once", title: "Welcome In", desc: "Logged into the hub once.", rarity: "common" },
   { id: "login_5", title: "Regular", desc: "Logged in 5 different days.", rarity: "common" },
@@ -133,7 +138,6 @@ const achievementsDef = [
 ];
 
 // Internal games: 300 stub entries
-// First 30 available, rest "Unavailable"
 const internalGames = [];
 for (let i = 1; i <= 300; i++) {
   let category;
@@ -253,10 +257,7 @@ function saveActivities() {
 }
 
 function addActivity(text) {
-  const item = {
-    text,
-    ts: Date.now()
-  };
+  const item = { text, ts: Date.now() };
   activities.push(item);
   saveActivities();
   renderActivity();
@@ -312,26 +313,39 @@ function getTitleFromStats(user) {
   return "Rookie";
 }
 
-// ---- Firebase optional init ----
+// ---- Optional Firebase init (v8 or v9 helpers) ----
 function initFirebaseIfConfigured() {
   try {
-    const cfg = window.NOTCHRIS_FIREBASE_CONFIG;
-    if (!cfg || !window.firebase) {
-      firebaseEnabled = false;
-      chatModeLabel.textContent = "Local demo chat";
-      leaderboardHint.textContent = "Local leaderboard (device-only). Add Firebase config for global.";
+    // v8 style via window.firebase + window.NOTCHRIS_FIREBASE_CONFIG
+    if (window.firebase && window.NOTCHRIS_FIREBASE_CONFIG) {
+      firebase.initializeApp(window.NOTCHRIS_FIREBASE_CONFIG);
+      db = firebase.firestore();
+      firebaseEnabled = true;
+      chatModeLabel.textContent = "Global chat (Firebase)";
+      leaderboardHint.textContent = "Global leaderboard via Firebase. Local is still used as backup.";
+      setupGlobalChatListener();
+      setupGlobalLeaderboardListener();
       return;
     }
-    if (firebase.apps.length === 0) {
-      firebase.initializeApp(cfg);
+
+    // v9 style (if you ever wire helpers like window.notchrisDB + window.notchrisFirestore)
+    if (window.notchrisDB && window.NOTCHRIS_BACKEND_ENABLED && window.notchrisFirestore) {
+      db = window.notchrisDB;
+      fsHelpers = window.notchrisFirestore;
+      firebaseEnabled = true;
+      chatModeLabel.textContent = "Global chat (Firebase)";
+      leaderboardHint.textContent = "Global leaderboard via Firebase. Local is still used as backup.";
+      setupGlobalChatListener();
+      setupGlobalLeaderboardListener();
+      return;
     }
-    db = firebase.firestore();
-    firebaseEnabled = true;
-    chatModeLabel.textContent = "Global chat (Firebase)";
-    leaderboardHint.textContent = "Global leaderboard via Firebase. Local is still used as backup.";
-    setupGlobalChatListener();
-    setupGlobalLeaderboardListener();
+
+    // Otherwise local-only
+    firebaseEnabled = false;
+    chatModeLabel.textContent = "Local demo chat";
+    leaderboardHint.textContent = "Local leaderboard (device-only). Add Firebase config for global.";
   } catch (e) {
+    console.error("Firebase init error", e);
     firebaseEnabled = false;
   }
 }
@@ -349,7 +363,6 @@ authForm.addEventListener("submit", (e) => {
 
   let u = findUser(name);
   if (!u) {
-    // create new
     u = {
       username: name,
       pin,
@@ -368,7 +381,6 @@ authForm.addEventListener("submit", (e) => {
     users.push(u);
     saveUsers();
   } else {
-    // login
     if (u.pin !== pin) {
       alert("Wrong PIN for this username.");
       return;
@@ -450,7 +462,6 @@ function renderGames() {
     .filter(g => !filterEasy.checked || g.easy)
     .filter(g => !filterChromebook.checked || g.chromebookSafe);
 
-  // Sort
   if (sort === "az") {
     list.sort((a, b) => a.name.localeCompare(b.name));
   } else if (sort === "new") {
@@ -462,7 +473,6 @@ function renderGames() {
       return aPlayed - bPlayed;
     });
   } else {
-    // popular
     list.sort((a, b) => (b.plays || 0) - (a.plays || 0));
   }
 
@@ -528,9 +538,8 @@ gamesSourceBtns.forEach(btn => {
   });
 });
 
-// Popular / trending / new (local)
+// Popular / trending / new
 function renderHomeGameStrips() {
-  // simple: top few internal as "popular", random as trending, last as new
   const popular = [...internalGames].sort((a, b) => (b.plays || 0) - (a.plays || 0)).slice(0, 6);
   const trending = [...internalGames].slice(10, 16);
   const newly = [...internalGames].slice(-6);
@@ -542,7 +551,6 @@ function renderHomeGameStrips() {
       pill.className = "pill";
       pill.textContent = g.name;
       pill.addEventListener("click", () => {
-        // quickly jump to games tab & highlight search
         switchToTab("games");
         gameSearch.value = g.name;
         renderGames();
@@ -565,13 +573,11 @@ function onGamePlayed(game) {
   currentUser.lastGameId = game.id;
   game.plays = (game.plays || 0) + 1;
 
-  // reward some coins + XP
   const baseCoins = currentSource === "internal" ? 5 : 3;
   const baseXP = currentSource === "internal" ? 10 : 7;
   currentUser.coins = (currentUser.coins || 0) + baseCoins;
   currentUser.xp = (currentUser.xp || 0) + baseXP;
 
-  // maybe favorite
   if (!currentUser.favoriteGameId || (currentUser.gamesPlayedMap[game.id] > (currentUser.gamesPlayedMap[currentUser.favoriteGameId] || 0))) {
     currentUser.favoriteGameId = game.id;
   }
@@ -595,10 +601,8 @@ function playExternalGame(game) {
   window.open(game.link, "_blank");
 }
 
-// Continue last game
 continueBtn.addEventListener("click", () => {
   if (!currentUser || !currentUser.lastGameId) return;
-  // try to find in internal first, then external
   let game = internalGames.find(g => g.id === currentUser.lastGameId) ||
              externalGames.find(g => g.id === currentUser.lastGameId);
   if (!game) return;
@@ -611,7 +615,6 @@ continueBtn.addEventListener("click", () => {
   }
 });
 
-// Daily reward
 dailyBtn.addEventListener("click", () => {
   if (!currentUser) return;
   if (!currentUser.lastDailyTime) currentUser.lastDailyTime = 0;
@@ -664,7 +667,6 @@ function checkAchievements() {
   const coins = currentUser.coins || 0;
   const msgs = currentUser.messagesSent || 0;
 
-  // basic ones
   set.add("login_once");
   if (days >= 5) set.add("login_5");
   if (games >= 1) set.add("play_1");
@@ -727,8 +729,6 @@ function renderLeaderboard() {
       leaderboardList.appendChild(li);
     });
   } else {
-    // global: content is fed by Firestore snapshot listener
-    // we just assume globalLbCache is up to date
     globalLbCache.forEach((entry, idx) => {
       const li = document.createElement("li");
       const youTag = (currentUser && entry.username === currentUser.username) ? " (you)" : "";
@@ -738,7 +738,6 @@ function renderLeaderboard() {
   }
 }
 
-// Leaderboard toggles
 lbLocalBtn.addEventListener("click", () => {
   lbLocalBtn.classList.add("active");
   lbGlobalBtn.classList.remove("active");
@@ -756,39 +755,63 @@ lbGlobalBtn.addEventListener("click", () => {
 lbMetric.addEventListener("change", renderLeaderboard);
 lbRange.addEventListener("change", renderLeaderboard);
 
-// Global leaderboard (Firestore)
 let globalLbCache = [];
 function setupGlobalLeaderboardListener() {
   if (!firebaseEnabled || !db) return;
   if (globalLbUnsub) globalLbUnsub();
 
-  globalLbUnsub = db.collection("leaderboard")
-    .orderBy("xp", "desc")
-    .limit(30)
-    .onSnapshot(snapshot => {
-      globalLbCache = [];
-      snapshot.forEach(doc => {
-        globalLbCache.push(doc.data());
-      });
-      if (lbGlobalBtn.classList.contains("active")) {
-        renderLeaderboard();
-      }
-    }, (err) => {
-      console.error("LB listener error", err);
-    });
+  // v8 or v9 style depending on how db/helpers are provided
+  try {
+    if (window.firebase && db) {
+      globalLbUnsub = db.collection("leaderboard")
+        .orderBy("xp", "desc")
+        .limit(30)
+        .onSnapshot(snapshot => {
+          globalLbCache = [];
+          snapshot.forEach(doc => globalLbCache.push(doc.data()));
+          if (lbGlobalBtn.classList.contains("active")) renderLeaderboard();
+        }, err => console.error("LB listener error", err));
+    } else if (fsHelpers && db) {
+      const { collection, query, orderBy, limit, onSnapshot } = fsHelpers;
+      const q = query(collection(db, "leaderboard"), orderBy("xp", "desc"), limit(30));
+      globalLbUnsub = onSnapshot(q, snapshot => {
+        globalLbCache = [];
+        snapshot.forEach(doc => globalLbCache.push(doc.data()));
+        if (lbGlobalBtn.classList.contains("active")) renderLeaderboard();
+      }, err => console.error("LB listener error", err));
+    }
+  } catch (e) {
+    console.error("setupGlobalLeaderboardListener error", e);
+  }
 }
 
 function updateGlobalLeaderboard() {
   if (!firebaseEnabled || !db || !currentUser) return;
-  const ref = db.collection("leaderboard").doc(currentUser.username);
-  ref.set({
-    username: currentUser.username,
-    xp: currentUser.xp || 0,
-    coins: currentUser.coins || 0,
-    gamesPlayed: currentUser.gamesPlayed || 0,
-    achievementsUnlocked: currentUser.achievementsUnlocked || 0,
-    updatedAt: Date.now()
-  }, { merge: true }).catch(console.error);
+  try {
+    if (window.firebase && db) {
+      db.collection("leaderboard").doc(currentUser.username).set({
+        username: currentUser.username,
+        xp: currentUser.xp || 0,
+        coins: currentUser.coins || 0,
+        gamesPlayed: currentUser.gamesPlayed || 0,
+        achievementsUnlocked: currentUser.achievementsUnlocked || 0,
+        updatedAt: Date.now()
+      }, { merge: true }).catch(console.error);
+    } else if (fsHelpers && db) {
+      const { doc, setDoc, collection } = fsHelpers;
+      const ref = doc(collection(db, "leaderboard"), currentUser.username);
+      setDoc(ref, {
+        username: currentUser.username,
+        xp: currentUser.xp || 0,
+        coins: currentUser.coins || 0,
+        gamesPlayed: currentUser.gamesPlayed || 0,
+        achievementsUnlocked: currentUser.achievementsUnlocked || 0,
+        updatedAt: Date.now()
+      }, { merge: true }).catch(console.error);
+    }
+  } catch (e) {
+    console.error("updateGlobalLeaderboard error", e);
+  }
 }
 
 // ---- Chat (local + optional global) ----
@@ -817,8 +840,7 @@ function getLocalChatMessages() {
 function appendChatMessage(name, text, ts = Date.now(), save = true, system = false, channel = "general") {
   const selChannel = chatChannelSelect.value;
   if (channel !== selChannel && !system) {
-    // we only render messages for current channel
-    // but keep them saved
+    // don't render now, but keep stored
   }
 
   if (channel === selChannel || system) {
@@ -843,39 +865,68 @@ function appendChatMessage(name, text, ts = Date.now(), save = true, system = fa
   }
 }
 
-// Global chat via Firestore
 function setupGlobalChatListener() {
   if (!firebaseEnabled || !db) return;
   if (globalChatUnsub) globalChatUnsub();
 
-  globalChatUnsub = db.collection("chat")
-    .orderBy("ts", "desc")
-    .limit(50)
-    .onSnapshot(snapshot => {
-      chatMessagesEl.innerHTML = "";
-      const all = [];
-      snapshot.forEach(doc => all.push(doc.data()));
-      all.sort((a, b) => a.ts - b.ts);
-      all.forEach(m => {
-        appendChatMessage(m.name, m.text, m.ts, false, m.system, m.channel || "general");
-      });
-    }, (err) => {
-      console.error("chat listener err", err);
-    });
+  try {
+    if (window.firebase && db) {
+      globalChatUnsub = db.collection("chat")
+        .orderBy("ts", "desc")
+        .limit(50)
+        .onSnapshot(snapshot => {
+          chatMessagesEl.innerHTML = "";
+          const all = [];
+          snapshot.forEach(doc => all.push(doc.data()));
+          all.sort((a, b) => a.ts - b.ts);
+          all.forEach(m => {
+            appendChatMessage(m.name, m.text, m.ts, false, m.system, m.channel || "general");
+          });
+        }, err => console.error("chat listener err", err));
+    } else if (fsHelpers && db) {
+      const { collection, query, orderBy, limit, onSnapshot } = fsHelpers;
+      const q = query(collection(db, "chat"), orderBy("ts", "desc"), limit(50));
+      globalChatUnsub = onSnapshot(q, snapshot => {
+        chatMessagesEl.innerHTML = "";
+        const all = [];
+        snapshot.forEach(doc => all.push(doc.data()));
+        all.sort((a, b) => a.ts - b.ts);
+        all.forEach(m => {
+          appendChatMessage(m.name, m.text, m.ts, false, m.system, m.channel || "general");
+        });
+      }, err => console.error("chat listener err", err));
+    }
+  } catch (e) {
+    console.error("setupGlobalChatListener error", e);
+  }
 }
 
 function sendGlobalChatMessage(name, text, system = false, channel = "general") {
   if (!firebaseEnabled || !db) return;
-  db.collection("chat").add({
-    name,
-    text,
-    ts: Date.now(),
-    system,
-    channel
-  }).catch(console.error);
+  try {
+    if (window.firebase && db) {
+      db.collection("chat").add({
+        name,
+        text,
+        ts: Date.now(),
+        system,
+        channel
+      }).catch(console.error);
+    } else if (fsHelpers && db) {
+      const { collection, addDoc } = fsHelpers;
+      addDoc(collection(db, "chat"), {
+        name,
+        text,
+        ts: Date.now(),
+        system,
+        channel
+      }).catch(console.error);
+    }
+  } catch (e) {
+    console.error("sendGlobalChatMessage error", e);
+  }
 }
 
-// Chat send
 chatSend.addEventListener("click", () => {
   sendChatFromInput();
 });
@@ -886,7 +937,6 @@ chatInput.addEventListener("keydown", (e) => {
   }
 });
 chatChannelSelect.addEventListener("change", () => {
-  // reload local chat or re-render snapshot (for global)
   if (!firebaseEnabled) {
     chatMessagesEl.innerHTML = "";
     const msgs = getLocalChatMessages();
@@ -898,7 +948,6 @@ function sendChatFromInput() {
   const text = (chatInput.value || "").trim();
   if (!text) return;
 
-  // commands
   if (text.startsWith("/")) {
     handleChatCommand(text);
     chatInput.value = "";
@@ -927,7 +976,6 @@ function sendChatFromInput() {
   chatInput.value = "";
 }
 
-// Chat commands
 function handleChatCommand(cmd) {
   const base = cmd.toLowerCase().trim();
 
@@ -957,7 +1005,6 @@ function handleChatCommand(cmd) {
   } else if (base === "/rank") {
     sys(`Your rank: ${getRankFromStats(currentUser)}.`);
   } else if (base === "/clear") {
-    // clear local chat
     saveChatLocal([]);
     chatMessagesEl.innerHTML = "";
     sys("Chat cleared (local only).");
@@ -999,7 +1046,6 @@ clearDataBtn.addEventListener("click", () => {
 
 function applyTheme() {
   const theme = settings.theme || "red";
-  // we could adjust CSS variable if we added them, for now just a simple class on body
   document.body.dataset.theme = theme;
 }
 
@@ -1012,13 +1058,12 @@ function applyAnimations() {
 function updateStreakOnLogin() {
   if (!currentUser) return;
   const today = new Date();
-  const dayKey = today.toISOString().slice(0, 10); // YYYY-MM-DD
+  const dayKey = today.toISOString().slice(0, 10);
   const last = currentUser.lastLoginDay;
 
   if (!last) {
     currentUser.streak = 1;
   } else if (last === dayKey) {
-    // same day, do nothing
   } else {
     const lastDate = new Date(last);
     const diffDays = Math.round((today - lastDate) / (24 * 60 * 60 * 1000));
@@ -1035,7 +1080,6 @@ function updateStreakOnLogin() {
 function updateUI() {
   if (!currentUser) return;
 
-  // basic stats
   const uname = currentUser.username || "Player";
   usernameLabel.textContent = uname;
 
@@ -1044,7 +1088,6 @@ function updateUI() {
   homeGames.textContent = currentUser.gamesPlayed || 0;
   homeAch.textContent = currentUser.achievementsUnlocked || 0;
 
-  // level & xp
   const xp = currentUser.xp || 0;
   const { level, currentXP, needed } = getLevelFromXP(xp);
   const pct = Math.min(100, (currentXP / needed) * 100);
@@ -1057,7 +1100,6 @@ function updateUI() {
   profileXPLabelBig.textContent = `${currentXP} / ${needed} XP`;
   profileLevelFillBig.style.width = `${pct}%`;
 
-  // rank & title
   const rank = getRankFromStats(currentUser);
   const title = getTitleFromStats(currentUser);
 
@@ -1065,19 +1107,15 @@ function updateUI() {
   profileRankBig.textContent = rank;
   profileTitle.textContent = title;
 
-  // profile names
   profileNameBanner.textContent = uname;
   profileNameBig.textContent = uname;
 
-  // streak
   const streak = currentUser.streak || 0;
   streakLabel.textContent = `${streak} day streak`;
   profileStreak.textContent = `${streak} days`;
 
-  // messages
   profileMessages.textContent = currentUser.messagesSent || 0;
 
-  // favorite game
   if (currentUser.favoriteGameId) {
     const g = internalGames.find(g => g.id === currentUser.favoriteGameId) ||
               externalGames.find(g => g.id === currentUser.favoriteGameId);
@@ -1086,19 +1124,16 @@ function updateUI() {
     profileFavorite.textContent = "None yet";
   }
 
-  // coins & others
   profileCoins.textContent = currentUser.coins || 0;
   profileGames.textContent = currentUser.gamesPlayed || 0;
   profileAch.textContent = currentUser.achievementsUnlocked || 0;
 
-  // continue button
   if (currentUser.lastGameId) {
     continueBtn.disabled = false;
   } else {
     continueBtn.disabled = true;
   }
 
-  // achievements, leaderboard, chat, home strips
   renderAchievements();
   renderLeaderboard();
   renderHomeGameStrips();
@@ -1156,7 +1191,6 @@ function init() {
 
   if (loader) loader.classList.add("hidden");
 
-  // optional firebase
   initFirebaseIfConfigured();
 }
 
