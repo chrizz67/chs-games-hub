@@ -1,34 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NotChris Hub</title>
   <link rel="stylesheet" href="style.css" />
 
-  <!-- OPTIONAL GLOBAL BACKEND (Firebase v8) -->
-  <!-- When you're ready for global chat + leaderboard:
-       1. Make a Firebase project
-       2. Get your config object
-       3. Replace the window.NOTCHRIS_FIREBASE_CONFIG below
-       4. Global features will auto-enable
-  -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script>
-    // 🔥 FILL THIS LATER IF YOU WANT GLOBAL FEATURES:
-    // window.NOTCHRIS_FIREBASE_CONFIG = {
-    //   apiKey: "...",
-    //   authDomain: "...",
-    //   projectId: "...",
-    //   storageBucket: "...",
-    //   messagingSenderId: "...",
-    //   appId: "..."
-    // };
-    window.NOTCHRIS_FIREBASE_CONFIG = null; // keep null for now = local-only mode
+  <!-- ============================================
+       🔥 FIREBASE BACKEND (Global Chat + Leaderboard)
+       Using Firebase v9 Modular SDK
+       ============================================ -->
+  <script type="module">
+    // Import Firebase SDK (v9)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+    // Your Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZp74S6FUq40pQ1rSunWbxNufH4WYDzBo",
+      authDomain: "notchris-hub.firebaseapp.com",
+      projectId: "notchris-hub",
+      storageBucket: "notchris-hub.firebasestorage.app",
+      messagingSenderId: "325966044596",
+      appId: "1:325966044596:web:4d28a86659da9a0923e6e1",
+      measurementId: "G-249QW10J8Q"
+    };
+
+    // Initialize Firebase
+    window.notchrisApp = initializeApp(firebaseConfig);
+    window.notchrisDB  = getFirestore(window.notchrisApp);
+
+    // Flag tells the rest of the site:
+    // "YES — Global backend is enabled."
+    window.NOTCHRIS_BACKEND_ENABLED = true;
   </script>
+
+  <!-- Your JS last -->
+  <script defer src="script.js"></script>
 </head>
-<body>
 
   <!-- LOADER (beaver vibes) -->
   <div id="loader" class="loader">
@@ -421,3 +428,4 @@
   <script src="script.js"></script>
 </body>
 </html>
+
