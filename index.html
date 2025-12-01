@@ -5,10 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NotChris Hub</title>
   <link rel="stylesheet" href="style.css" />
+
+  <!-- OPTIONAL GLOBAL BACKEND (Firebase v8) -->
+  <!-- When you're ready for global chat + leaderboard:
+       1. Make a Firebase project
+       2. Get your config object
+       3. Replace the window.NOTCHRIS_FIREBASE_CONFIG below
+       4. Global features will auto-enable
+  -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    // 🔥 FILL THIS LATER IF YOU WANT GLOBAL FEATURES:
+    // window.NOTCHRIS_FIREBASE_CONFIG = {
+    //   apiKey: "...",
+    //   authDomain: "...",
+    //   projectId: "...",
+    //   storageBucket: "...",
+    //   messagingSenderId: "...",
+    //   appId: "..."
+    // };
+    window.NOTCHRIS_FIREBASE_CONFIG = null; // keep null for now = local-only mode
+  </script>
 </head>
 <body>
 
-  <!-- LOADER (keep your beaver theme however you like visually) -->
+  <!-- LOADER (beaver vibes) -->
   <div id="loader" class="loader">
     <div class="loader-inner">
       <div class="loader-circle"></div>
@@ -21,67 +43,105 @@
   <div id="authScreen" class="screen centered">
     <div class="auth-card">
       <h1>NotChris Hub</h1>
-      <p class="sub">Sign in with a username & 4-digit PIN to save your hub stats on this device.</p>
+      <p class="sub">Sign in with a username & 4-digit PIN. Your stats & progress stay on this device.</p>
       <form id="authForm">
         <input id="authName" type="text" placeholder="Username" autocomplete="off" />
         <input id="authPin" type="password" placeholder="PIN (4 digits)" maxlength="4" />
         <button type="submit">Enter hub</button>
       </form>
       <p class="hint">
-        If the username exists, you’ll log in. If not, a new NotChris profile is created locally.
+        If the username exists, you log in. If not, a new profile is created locally.
       </p>
     </div>
   </div>
 
   <!-- MAIN APP -->
   <div id="app" class="app hidden">
-    <!-- Top bar -->
+    <!-- Topbar -->
     <header class="topbar">
       <div>
         <h2 id="welcomeTitle">Hub</h2>
         <p id="welcomeSubtitle" class="muted">Welcome to the NotChris hub — stats saved locally.</p>
       </div>
-      <div class="top-coins">
-        <span class="coin-icon"></span>
-        <span id="coinAmount">0</span>
+      <div class="top-right">
+        <div class="streak-pill">
+          <span id="streakFlame">🔥</span>
+          <span id="streakLabel">0 day streak</span>
+        </div>
+        <div class="top-coins">
+          <span class="coin-icon"></span>
+          <span id="coinAmount">0</span>
+        </div>
       </div>
     </header>
 
-    <!-- Inner screens -->
+    <!-- Main content -->
     <main class="main">
       <!-- HOME -->
       <section id="screen-home" class="inner-screen active">
-        <div class="card">
-          <div class="card-header">
-            <span>Overview</span>
-            <span id="usernameLabel"></span>
+        <!-- Profile summary -->
+        <div class="card profile-banner">
+          <div class="banner-left">
+            <div class="avatar-circle" id="profileAvatar"></div>
           </div>
-          <div class="overview-row">
-            <div class="stat">
-              <span class="stat-label">Coins</span>
-              <span id="homeCoins" class="stat-value">0</span>
+          <div class="banner-center">
+            <div class="banner-name-rank">
+              <span id="profileNameBanner" class="banner-name">Player</span>
+              <span id="profileRankBanner" class="rank-pill">New Player</span>
             </div>
-            <div class="stat">
-              <span class="stat-label">Games played</span>
-              <span id="homeGames" class="stat-value">0</span>
-            </div>
-            <div class="stat">
-              <span class="stat-label">Achievements</span>
-              <span id="homeAch" class="stat-value">0</span>
+            <div class="level-row">
+              <span id="profileLevelLabel">Level 1</span>
+              <div class="level-bar">
+                <div id="profileLevelFill" class="level-fill"></div>
+              </div>
+              <span id="profileXPLabel" class="level-xp">0 / 100 XP</span>
             </div>
           </div>
-          <p class="muted tiny">Stats are saved only in this browser for your NotChris profile.</p>
+          <div class="banner-right">
+            <div class="stat-mini">
+              <span class="stat-mini-label">Games</span>
+              <span id="homeGames" class="stat-mini-value">0</span>
+            </div>
+            <div class="stat-mini">
+              <span class="stat-mini-label">Ach</span>
+              <span id="homeAch" class="stat-mini-value">0</span>
+            </div>
+            <div class="stat-mini">
+              <span class="stat-mini-label">Coins</span>
+              <span id="homeCoins" class="stat-mini-value">0</span>
+            </div>
+          </div>
         </div>
 
+        <!-- Continue / daily -->
+        <div class="card">
+          <div class="card-header">
+            <span>Quick actions</span>
+            <span id="usernameLabel"></span>
+          </div>
+          <div class="quick-row">
+            <button id="continueBtn" class="pill-btn" disabled>Continue last game</button>
+            <button id="dailyBtn" class="pill-btn">Claim daily reward</button>
+          </div>
+          <p class="muted tiny">
+            Daily reward gives coins & XP. Continue takes you back to your most recent game.
+          </p>
+        </div>
+
+        <!-- Popular / trending / new -->
         <div class="card">
           <h3>Popular today</h3>
           <div id="popularGames" class="pill-row"></div>
         </div>
 
         <div class="card">
-          <h3>Local leaderboard</h3>
-          <ol id="leaderboard" class="leaderboard-list"></ol>
-          <p class="muted tiny">Leaderboard is local to this browser.</p>
+          <h3>Trending this week</h3>
+          <div id="trendingGames" class="pill-row"></div>
+        </div>
+
+        <div class="card">
+          <h3>Recently added</h3>
+          <div id="newGames" class="pill-row"></div>
         </div>
       </section>
 
@@ -96,9 +156,23 @@
           <button class="games-source-btn" data-source="external">External</button>
         </div>
 
-        <div id="gamesCategories" class="games-categories"></div>
+        <div class="games-filters">
+          <div id="gamesCategories" class="games-categories"></div>
+          <select id="gamesSort" class="select">
+            <option value="popular">Sort: Popular</option>
+            <option value="az">Sort: A–Z</option>
+            <option value="new">Sort: Newest</option>
+            <option value="unplayed">Sort: Not played</option>
+          </select>
+        </div>
 
         <input id="gameSearch" class="search" type="text" placeholder="Search games…" />
+
+        <div class="filter-chips">
+          <label><input type="checkbox" id="filterTwoPlayer" /> 2-player</label>
+          <label><input type="checkbox" id="filterEasy" /> Easy only</label>
+          <label><input type="checkbox" id="filterChromebook" /> Chromebook-safe</label>
+        </div>
 
         <div id="gameList" class="game-list"></div>
       </section>
@@ -107,24 +181,67 @@
       <section id="screen-chat" class="inner-screen">
         <div class="section-header">
           <h3>Chatroom</h3>
+          <span id="chatModeLabel" class="muted tiny">Local demo chat</span>
         </div>
 
         <div class="card chat-card">
+          <div class="chat-header-row">
+            <select id="chatChannelSelect" class="select small">
+              <option value="general">#general</option>
+              <option value="games">#games</option>
+              <option value="help">#help</option>
+            </select>
+            <span id="onlineCount" class="muted tiny">Online: ~1</span>
+          </div>
           <div id="chatMessages" class="chat-messages"></div>
           <div class="chat-input-row">
-            <input id="chatInput" type="text" placeholder="Type a message…" />
+            <input id="chatInput" type="text" placeholder="Type a message or /help…" />
             <button id="chatSend">Send</button>
           </div>
         </div>
-        <p class="muted tiny">Chat is local to this device (NotChris demo).</p>
+        <p class="muted tiny">
+          Commands: /help, /stats, /coins, /daily, /randomgame, /rank, /clear (local).
+        </p>
       </section>
 
       <!-- ACHIEVEMENTS -->
       <section id="screen-achievements" class="inner-screen">
         <div class="section-header">
-          <h3>Achievements</h3>
+          <h3>Achievements & Badges</h3>
         </div>
         <div id="achievementsList" class="ach-list"></div>
+      </section>
+
+      <!-- LEADERBOARD -->
+      <section id="screen-leaderboard" class="inner-screen">
+        <div class="section-header">
+          <h3>Leaderboard</h3>
+        </div>
+
+        <div class="leaderboard-toggle">
+          <button id="lbLocalBtn" class="lb-toggle-btn active">Local</button>
+          <button id="lbGlobalBtn" class="lb-toggle-btn">Global</button>
+        </div>
+
+        <div class="leaderboard-filters">
+          <select id="lbMetric" class="select small">
+            <option value="xp">XP</option>
+            <option value="coins">Coins</option>
+            <option value="gamesPlayed">Games played</option>
+            <option value="achievementsUnlocked">Achievements</option>
+          </select>
+          <select id="lbRange" class="select small">
+            <option value="all">All time</option>
+            <option value="week">This week (local)</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <ol id="leaderboardList" class="leaderboard-list"></ol>
+          <p id="leaderboardHint" class="muted tiny">
+            Local leaderboard is based on profiles on this device. Global uses Firebase when configured.
+          </p>
+        </div>
       </section>
 
       <!-- PROFILE -->
@@ -132,16 +249,124 @@
         <div class="section-header">
           <h3>Profile</h3>
         </div>
-        <div class="card">
-          <p><strong>User:</strong> <span id="profileName"></span></p>
-          <p><strong>Coins:</strong> <span id="profileCoins">0</span></p>
-          <p><strong>Games played:</strong> <span id="profileGames">0</span></p>
-          <p><strong>Achievements:</strong> <span id="profileAch">0</span></p>
+
+        <!-- Big profile banner reused style -->
+        <div class="card profile-banner">
+          <div class="banner-left">
+            <div class="avatar-circle large" id="profileAvatarBig"></div>
+          </div>
+          <div class="banner-center">
+            <div class="banner-name-rank">
+              <span id="profileNameBig" class="banner-name">Player</span>
+              <span id="profileRankBig" class="rank-pill">New Player</span>
+            </div>
+            <div class="level-row">
+              <span id="profileLevelLabelBig">Level 1</span>
+              <div class="level-bar">
+                <div id="profileLevelFillBig" class="level-fill"></div>
+              </div>
+              <span id="profileXPLabelBig" class="level-xp">0 / 100 XP</span>
+            </div>
+            <div class="title-row">
+              <span class="muted tiny">Title:</span>
+              <span id="profileTitle" class="title-pill">Rookie</span>
+            </div>
+          </div>
         </div>
 
+        <!-- Stats grid -->
+        <div class="card stats-grid-card">
+          <div class="stat-grid-item">
+            <span class="stat-label">Coins</span>
+            <span id="profileCoins" class="stat-value">0</span>
+          </div>
+          <div class="stat-grid-item">
+            <span class="stat-label">Games played</span>
+            <span id="profileGames" class="stat-value">0</span>
+          </div>
+          <div class="stat-grid-item">
+            <span class="stat-label">Achievements</span>
+            <span id="profileAch" class="stat-value">0</span>
+          </div>
+          <div class="stat-grid-item">
+            <span class="stat-label">Streak</span>
+            <span id="profileStreak" class="stat-value">0 days</span>
+          </div>
+          <div class="stat-grid-item">
+            <span class="stat-label">Messages sent</span>
+            <span id="profileMessages" class="stat-value">0</span>
+          </div>
+          <div class="stat-grid-item">
+            <span class="stat-label">Favorite game</span>
+            <span id="profileFavorite" class="stat-value small">None yet</span>
+          </div>
+        </div>
+
+        <!-- Recent activity -->
+        <div class="card">
+          <h3>Recent activity</h3>
+          <ul id="activityList" class="activity-list"></ul>
+        </div>
+
+        <!-- Settings -->
+        <div class="card">
+          <h3>Settings</h3>
+          <div class="settings-row">
+            <label>Accent theme</label>
+            <select id="themeSelect" class="select small">
+              <option value="red">Red (default)</option>
+              <option value="blue">Blue</option>
+              <option value="purple">Purple</option>
+              <option value="gold">Gold</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label>Animations</label>
+            <select id="animSelect" class="select small">
+              <option value="full">Full</option>
+              <option value="reduced">Reduced</option>
+            </select>
+          </div>
+          <button id="clearDataBtn" class="danger-btn small">Clear all local data</button>
+        </div>
+
+        <!-- Session -->
         <div class="card">
           <h3>Session</h3>
           <button id="logoutBtn" class="danger-btn">Log out (this device)</button>
+        </div>
+      </section>
+
+      <!-- HELP -->
+      <section id="screen-help" class="inner-screen">
+        <div class="section-header">
+          <h3>Help & Commands</h3>
+        </div>
+        <div class="card">
+          <h3>Basics</h3>
+          <ul class="help-list">
+            <li>Use the bottom nav to switch between Home, Games, Chat, Achievements, Leaderboard, Profile, Help.</li>
+            <li>Your username & PIN only live in this browser. No server login yet.</li>
+            <li>Coins, XP, streak, badges are all saved locally.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Chat commands</h3>
+          <ul class="help-list">
+            <li><code>/help</code> – show commands</li>
+            <li><code>/stats</code> – show your stats</li>
+            <li><code>/coins</code> – show your coins</li>
+            <li><code>/daily</code> – quick daily reward</li>
+            <li><code>/randomgame</code> – pick a random game</li>
+            <li><code>/rank</code> – show your rank</li>
+            <li><code>/clear</code> – clear chat on your device</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Global features</h3>
+          <p class="muted tiny">
+            Global chat & leaderboards unlock when Firebase config is added in <code>index.html</code>.
+          </p>
         </div>
       </section>
     </main>
@@ -164,14 +389,22 @@
         <span class="nav-icon trophy"></span>
         <span class="nav-label">Ach</span>
       </button>
+      <button class="nav-btn" data-target="leaderboard">
+        <span class="nav-icon lb"></span>
+        <span class="nav-label">LB</span>
+      </button>
       <button class="nav-btn" data-target="profile">
         <span class="nav-icon user"></span>
         <span class="nav-label">Profile</span>
       </button>
+      <button class="nav-btn" data-target="help">
+        <span class="nav-icon help"></span>
+        <span class="nav-label">Help</span>
+      </button>
     </nav>
   </div>
 
-  <!-- GAME OVERLAY (INTERNAL GAMES) -->
+  <!-- GAME OVERLAY (INTERNAL ONLY) -->
   <div id="gameOverlay" class="game-overlay hidden">
     <div class="game-overlay-inner">
       <div class="game-overlay-top">
