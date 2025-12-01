@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,11 +11,9 @@
        Using Firebase v9 Modular SDK
        ============================================ -->
   <script type="module">
-    // Import Firebase SDK (v9)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
-    // Your Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyDZp74S6FUq40pQ1rSunWbxNufH4WYDzBo",
       authDomain: "notchris-hub.firebaseapp.com",
@@ -24,20 +24,15 @@
       measurementId: "G-249QW10J8Q"
     };
 
-    // Initialize Firebase
     window.notchrisApp = initializeApp(firebaseConfig);
     window.notchrisDB  = getFirestore(window.notchrisApp);
-
-    // Flag tells the rest of the site:
-    // "YES — Global backend is enabled."
     window.NOTCHRIS_BACKEND_ENABLED = true;
   </script>
-
-  <!-- Your JS last -->
-  <script defer src="script.js"></script>
 </head>
 
-  <!-- LOADER (beaver vibes) -->
+<body>
+
+  <!-- LOADER -->
   <div id="loader" class="loader">
     <div class="loader-inner">
       <div class="loader-circle"></div>
@@ -50,26 +45,28 @@
   <div id="authScreen" class="screen centered">
     <div class="auth-card">
       <h1>NotChris Hub</h1>
-      <p class="sub">Sign in with a username & 4-digit PIN. Your stats & progress stay on this device.</p>
+      <p class="sub">Sign in with username & 4-digit PIN.</p>
       <form id="authForm">
-        <input id="authName" type="text" placeholder="Username" autocomplete="off" />
-        <input id="authPin" type="password" placeholder="PIN (4 digits)" maxlength="4" />
-        <button type="submit">Enter hub</button>
+        <input id="authName" type="text" placeholder="Username" />
+        <input id="authPin" type="password" maxlength="4" placeholder="PIN (4 digits)" />
+        <button type="submit">Enter Hub</button>
       </form>
-      <p class="hint">
-        If the username exists, you log in. If not, a new profile is created locally.
-      </p>
+      <p class="hint">If the user exists → login. If not → create new profile.</p>
     </div>
   </div>
 
   <!-- MAIN APP -->
   <div id="app" class="app hidden">
-    <!-- Topbar -->
+
+    <!-- TOPBAR -->
     <header class="topbar">
       <div>
         <h2 id="welcomeTitle">Hub</h2>
-        <p id="welcomeSubtitle" class="muted">Welcome to the NotChris hub — stats saved locally.</p>
+        <p id="welcomeSubtitle" class="muted">
+          Welcome to the NotChris Hub — Stats stored locally & globally.
+        </p>
       </div>
+
       <div class="top-right">
         <div class="streak-pill">
           <span id="streakFlame">🔥</span>
@@ -82,20 +79,23 @@
       </div>
     </header>
 
-    <!-- Main content -->
     <main class="main">
+
       <!-- HOME -->
       <section id="screen-home" class="inner-screen active">
-        <!-- Profile summary -->
+
+        <!-- PROFILE BANNER -->
         <div class="card profile-banner">
           <div class="banner-left">
-            <div class="avatar-circle" id="profileAvatar"></div>
+            <div id="profileAvatar" class="avatar-circle"></div>
           </div>
+
           <div class="banner-center">
             <div class="banner-name-rank">
               <span id="profileNameBanner" class="banner-name">Player</span>
               <span id="profileRankBanner" class="rank-pill">New Player</span>
             </div>
+
             <div class="level-row">
               <span id="profileLevelLabel">Level 1</span>
               <div class="level-bar">
@@ -104,6 +104,7 @@
               <span id="profileXPLabel" class="level-xp">0 / 100 XP</span>
             </div>
           </div>
+
           <div class="banner-right">
             <div class="stat-mini">
               <span class="stat-mini-label">Games</span>
@@ -120,22 +121,20 @@
           </div>
         </div>
 
-        <!-- Continue / daily -->
+        <!-- QUICK ACTIONS -->
         <div class="card">
           <div class="card-header">
             <span>Quick actions</span>
             <span id="usernameLabel"></span>
           </div>
+
           <div class="quick-row">
             <button id="continueBtn" class="pill-btn" disabled>Continue last game</button>
-            <button id="dailyBtn" class="pill-btn">Claim daily reward</button>
+            <button id="dailyBtn" class="pill-btn">Daily reward</button>
           </div>
-          <p class="muted tiny">
-            Daily reward gives coins & XP. Continue takes you back to your most recent game.
-          </p>
         </div>
 
-        <!-- Popular / trending / new -->
+        <!-- POPULAR / TRENDING / NEW -->
         <div class="card">
           <h3>Popular today</h3>
           <div id="popularGames" class="pill-row"></div>
@@ -154,6 +153,7 @@
 
       <!-- GAMES -->
       <section id="screen-games" class="inner-screen">
+
         <div class="section-header">
           <h3>Games</h3>
         </div>
@@ -167,9 +167,9 @@
           <div id="gamesCategories" class="games-categories"></div>
           <select id="gamesSort" class="select">
             <option value="popular">Sort: Popular</option>
-            <option value="az">Sort: A–Z</option>
-            <option value="new">Sort: Newest</option>
-            <option value="unplayed">Sort: Not played</option>
+            <option value="az">A–Z</option>
+            <option value="new">Newest</option>
+            <option value="unplayed">Not played</option>
           </select>
         </div>
 
@@ -188,7 +188,7 @@
       <section id="screen-chat" class="inner-screen">
         <div class="section-header">
           <h3>Chatroom</h3>
-          <span id="chatModeLabel" class="muted tiny">Local demo chat</span>
+          <span id="chatModeLabel" class="muted tiny">Global chat enabled</span>
         </div>
 
         <div class="card chat-card">
@@ -198,17 +198,16 @@
               <option value="games">#games</option>
               <option value="help">#help</option>
             </select>
-            <span id="onlineCount" class="muted tiny">Online: ~1</span>
+            <span id="onlineCount" class="muted tiny">Online: 1</span>
           </div>
+
           <div id="chatMessages" class="chat-messages"></div>
+
           <div class="chat-input-row">
             <input id="chatInput" type="text" placeholder="Type a message or /help…" />
             <button id="chatSend">Send</button>
           </div>
         </div>
-        <p class="muted tiny">
-          Commands: /help, /stats, /coins, /daily, /randomgame, /rank, /clear (local).
-        </p>
       </section>
 
       <!-- ACHIEVEMENTS -->
@@ -234,19 +233,20 @@
           <select id="lbMetric" class="select small">
             <option value="xp">XP</option>
             <option value="coins">Coins</option>
-            <option value="gamesPlayed">Games played</option>
+            <option value="gamesPlayed">Games Played</option>
             <option value="achievementsUnlocked">Achievements</option>
           </select>
+
           <select id="lbRange" class="select small">
-            <option value="all">All time</option>
-            <option value="week">This week (local)</option>
+            <option value="all">All Time</option>
+            <option value="week">This Week</option>
           </select>
         </div>
 
         <div class="card">
           <ol id="leaderboardList" class="leaderboard-list"></ol>
-          <p id="leaderboardHint" class="muted tiny">
-            Local leaderboard is based on profiles on this device. Global uses Firebase when configured.
+          <p class="muted tiny">
+            Global leaderboard uses Firebase when available.
           </p>
         </div>
       </section>
@@ -257,16 +257,18 @@
           <h3>Profile</h3>
         </div>
 
-        <!-- Big profile banner reused style -->
+        <!-- PROFILE BANNER -->
         <div class="card profile-banner">
           <div class="banner-left">
-            <div class="avatar-circle large" id="profileAvatarBig"></div>
+            <div id="profileAvatarBig" class="avatar-circle large"></div>
           </div>
+
           <div class="banner-center">
             <div class="banner-name-rank">
               <span id="profileNameBig" class="banner-name">Player</span>
               <span id="profileRankBig" class="rank-pill">New Player</span>
             </div>
+
             <div class="level-row">
               <span id="profileLevelLabelBig">Level 1</span>
               <div class="level-bar">
@@ -274,6 +276,7 @@
               </div>
               <span id="profileXPLabelBig" class="level-xp">0 / 100 XP</span>
             </div>
+
             <div class="title-row">
               <span class="muted tiny">Title:</span>
               <span id="profileTitle" class="title-pill">Rookie</span>
@@ -281,14 +284,14 @@
           </div>
         </div>
 
-        <!-- Stats grid -->
+        <!-- STATS GRID -->
         <div class="card stats-grid-card">
           <div class="stat-grid-item">
             <span class="stat-label">Coins</span>
             <span id="profileCoins" class="stat-value">0</span>
           </div>
           <div class="stat-grid-item">
-            <span class="stat-label">Games played</span>
+            <span class="stat-label">Games Played</span>
             <span id="profileGames" class="stat-value">0</span>
           </div>
           <div class="stat-grid-item">
@@ -300,24 +303,25 @@
             <span id="profileStreak" class="stat-value">0 days</span>
           </div>
           <div class="stat-grid-item">
-            <span class="stat-label">Messages sent</span>
+            <span class="stat-label">Messages Sent</span>
             <span id="profileMessages" class="stat-value">0</span>
           </div>
           <div class="stat-grid-item">
-            <span class="stat-label">Favorite game</span>
+            <span class="stat-label">Favorite Game</span>
             <span id="profileFavorite" class="stat-value small">None yet</span>
           </div>
         </div>
 
-        <!-- Recent activity -->
+        <!-- RECENT ACTIVITY -->
         <div class="card">
-          <h3>Recent activity</h3>
+          <h3>Recent Activity</h3>
           <ul id="activityList" class="activity-list"></ul>
         </div>
 
-        <!-- Settings -->
+        <!-- SETTINGS -->
         <div class="card">
           <h3>Settings</h3>
+
           <div class="settings-row">
             <label>Accent theme</label>
             <select id="themeSelect" class="select small">
@@ -327,6 +331,7 @@
               <option value="gold">Gold</option>
             </select>
           </div>
+
           <div class="settings-row">
             <label>Animations</label>
             <select id="animSelect" class="select small">
@@ -334,13 +339,14 @@
               <option value="reduced">Reduced</option>
             </select>
           </div>
-          <button id="clearDataBtn" class="danger-btn small">Clear all local data</button>
+
+          <button id="clearDataBtn" class="danger-btn small">Clear local data</button>
         </div>
 
-        <!-- Session -->
+        <!-- SESSION -->
         <div class="card">
           <h3>Session</h3>
-          <button id="logoutBtn" class="danger-btn">Log out (this device)</button>
+          <button id="logoutBtn" class="danger-btn">Log out</button>
         </div>
       </section>
 
@@ -349,69 +355,53 @@
         <div class="section-header">
           <h3>Help & Commands</h3>
         </div>
+
         <div class="card">
           <h3>Basics</h3>
           <ul class="help-list">
-            <li>Use the bottom nav to switch between Home, Games, Chat, Achievements, Leaderboard, Profile, Help.</li>
-            <li>Your username & PIN only live in this browser. No server login yet.</li>
-            <li>Coins, XP, streak, badges are all saved locally.</li>
+            <li>Bottom nav switches tabs.</li>
+            <li>Username + PIN saved locally.</li>
+            <li>Coins, XP, streak, badges saved locally + globally.</li>
           </ul>
         </div>
+
         <div class="card">
-          <h3>Chat commands</h3>
+          <h3>Commands</h3>
           <ul class="help-list">
-            <li><code>/help</code> – show commands</li>
-            <li><code>/stats</code> – show your stats</li>
-            <li><code>/coins</code> – show your coins</li>
-            <li><code>/daily</code> – quick daily reward</li>
-            <li><code>/randomgame</code> – pick a random game</li>
-            <li><code>/rank</code> – show your rank</li>
-            <li><code>/clear</code> – clear chat on your device</li>
+            <li><code>/help</code> – commands</li>
+            <li><code>/stats</code> – your stats</li>
+            <li><code>/coins</code> – your coins</li>
+            <li><code>/daily</code> – claim daily reward</li>
+            <li><code>/randomgame</code> – random game</li>
+            <li><code>/rank</code> – your rank</li>
+            <li><code>/clear</code> – clear chat (local)</li>
           </ul>
         </div>
+
         <div class="card">
           <h3>Global features</h3>
           <p class="muted tiny">
-            Global chat & leaderboards unlock when Firebase config is added in <code>index.html</code>.
+            Firebase enables global chat + leaderboard.
           </p>
         </div>
       </section>
+
     </main>
 
-    <!-- Bottom nav -->
+    <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
-      <button class="nav-btn active" data-target="home">
-        <span class="nav-icon home"></span>
-        <span class="nav-label">Home</span>
-      </button>
-      <button class="nav-btn" data-target="games">
-        <span class="nav-icon games"></span>
-        <span class="nav-label">Games</span>
-      </button>
-      <button class="nav-btn" data-target="chat">
-        <span class="nav-icon chat"></span>
-        <span class="nav-label">Chat</span>
-      </button>
-      <button class="nav-btn" data-target="achievements">
-        <span class="nav-icon trophy"></span>
-        <span class="nav-label">Ach</span>
-      </button>
-      <button class="nav-btn" data-target="leaderboard">
-        <span class="nav-icon lb"></span>
-        <span class="nav-label">LB</span>
-      </button>
-      <button class="nav-btn" data-target="profile">
-        <span class="nav-icon user"></span>
-        <span class="nav-label">Profile</span>
-      </button>
-      <button class="nav-btn" data-target="help">
-        <span class="nav-icon help"></span>
-        <span class="nav-label">Help</span>
-      </button>
+      <button class="nav-btn active" data-target="home"><span class="nav-icon home"></span><span class="nav-label">Home</span></button>
+      <button class="nav-btn" data-target="games"><span class="nav-icon games"></span><span class="nav-label">Games</span></button>
+      <button class="nav-btn" data-target="chat"><span class="nav-icon chat"></span><span class="nav-label">Chat</span></button>
+      <button class="nav-btn" data-target="achievements"><span class="nav-icon trophy"></span><span class="nav-label">Ach</span></button>
+      <button class="nav-btn" data-target="leaderboard"><span class="nav-icon lb"></span><span class="nav-label">LB</span></button>
+      <button class="nav-btn" data-target="profile"><span class="nav-icon user"></span><span class="nav-label">Profile</span></button>
+      <button class="nav-btn" data-target="help"><span class="nav-icon help"></span><span class="nav-label">Help</span></button>
     </nav>
+
   </div>
 
-  <!-- GAME OVERLAY (INTERNAL ONLY) -->
+  <!-- GAME OVERLAY -->
   <div id="gameOverlay" class="game-overlay hidden">
     <div class="game-overlay-inner">
       <div class="game-overlay-top">
@@ -420,12 +410,12 @@
         <button id="gameFullscreenBtn" class="overlay-btn">⛶</button>
       </div>
       <div class="game-frame-wrap">
-        <iframe id="gameFrame" src="" allowfullscreen loading="lazy"></iframe>
+        <iframe id="gameFrame" src="" allowfullscreen></iframe>
       </div>
     </div>
   </div>
 
   <script src="script.js"></script>
+
 </body>
 </html>
-
