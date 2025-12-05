@@ -322,7 +322,7 @@ function initFirebaseIfConfigured() {
       db = firebase.firestore();
       firebaseEnabled = true;
       chatModeLabel.textContent = "Global chat (Firebase)";
-      leaderboardHint.textContent = "Global leaderboard via Firebase. Local is still used as backup.";
+if (leaderboardHint)       leaderboardHint.textContent = "Global leaderboard via Firebase. Local is still used as backup.";
       setupGlobalChatListener();
       setupGlobalLeaderboardListener();
       return;
@@ -334,7 +334,7 @@ function initFirebaseIfConfigured() {
       fsHelpers = window.notchrisFirestore;
       firebaseEnabled = true;
       chatModeLabel.textContent = "Global chat (Firebase)";
-      leaderboardHint.textContent = "Global leaderboard via Firebase. Local is still used as backup.";
+      if (leaderboardHint) leaderboardHint.textContent = "Global leaderboard via Firebase. Local is still used as backup.";
       setupGlobalChatListener();
       setupGlobalLeaderboardListener();
       return;
@@ -343,7 +343,7 @@ function initFirebaseIfConfigured() {
     // Otherwise local-only
     firebaseEnabled = false;
     chatModeLabel.textContent = "Local demo chat";
-    leaderboardHint.textContent = "Local leaderboard (device-only). Add Firebase config for global.";
+    if (leaderboardHint) leaderboardHint.textContent = "Local leaderboard (device-only). Add Firebase config for global.";
   } catch (e) {
     console.error("Firebase init error", e);
     firebaseEnabled = false;
@@ -1196,3 +1196,4 @@ function init() {
 
 // Start
 init();
+
