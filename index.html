@@ -10,6 +10,7 @@
   <script type="module" id="firebase-loader">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+        import { collection, query, orderBy, limit, onSnapshot, doc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDZp74S6FUq40pQ1rSunWbxNufH4WYDzBo",
@@ -25,6 +26,7 @@
     window.notchrisApp = initializeApp(firebaseConfig);
     window.notchrisDB  = getFirestore(window.notchrisApp);
     window.NOTCHRIS_BACKEND_ENABLED = true;
+        window.notchrisFirestore = { collection, query, orderBy, limit, onSnapshot, doc, setDoc, addDoc };
 
     // Wait until Firebase is ready, then load script.js
     const tag = document.createElement("script");
@@ -423,4 +425,5 @@
 
 </body>
 </html>
+
 
