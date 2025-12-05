@@ -135,6 +135,21 @@ const achievementsDef = [
   { id: "chat_10", title: "Chatter", desc: "Send 10 messages.", rarity: "common" },
   { id: "streak_3", title: "3-Day Streak", desc: "Log in 3 days in a row.", rarity: "rare" },
   { id: "streak_7", title: "Week Warrior", desc: "7-day login streak.", rarity: "epic" }
+    { id: "play_50", title: "Dedicated Player", desc: "Played 50 games.", rarity: "rare" },
+    { id: "play_100", title: "Century Club", desc: "Played 100 games.", rarity: "epic" },
+        { id: "play_200", title: "Game Master", desc: "Played 200 games.", rarity: "legendary" },
+            { id: "coins_500", title: "Coin Enthusiast", desc: "Reach 500 coins.", rarity: "rare" },
+                { id: "coins_5000", title: "Millionaire", desc: "Reach 5000 coins.", rarity: "legendary" },
+                    { id: "chat_50", title: "Social Butterfly", desc: "Send 50 messages.", rarity: "rare" },
+                        { id: "chat_100", title: "Chat Legend", desc: "Send 100 messages.", rarity: "epic" },
+                            { id: "streak_14", title: "Two Week Warrior", desc: "14-day login streak.", rarity: "legendary" },
+                                { id: "streak_30", title: "Monthly Master", desc: "30-day login streak.", rarity: "legendary" },
+                                    { id: "level_5", title: "Rising Star", desc: "Reach level 5.", rarity: "common" },
+                                        { id: "level_10", title: "Veteran", desc: "Reach level 10.", rarity: "rare" },
+                                            { id: "level_20", title: "Elite Player", desc: "Reach level 20.", rarity: "epic" },
+                                                { id: "all_categories", title: "Variety Seeker", desc: "Play games from all 5 categories.", rarity: "rare" },
+                                                    { id: "night_owl", title: "Night Owl", desc: "Play a game after midnight.", rarity: "rare" },
+                                                        { id: "early_bird", title: "Early Bird", desc: "Play a game before 6 AM.", rarity: "rare" }
 ];
 
 // Internal games: 300 stub entries
@@ -213,7 +228,45 @@ const externalGames = [
     easy: true,
     chromebookSafe: true,
     plays: 0
-  }
+  },
+    {
+          id: "agario",
+          name: "Agar.io",
+          desc: "Eat to grow bigger.",
+          category: "Arcade",
+          tags: ["multiplayer", "casual"],
+          link: "https://agar.io",
+          twoPlayer: false,
+          easy: true,
+          chromebookSafe: true,
+          plays: 0
+              },
+    {
+          id: "slitherio",
+          name: "Slither.io",
+          desc: "Snake battle royale.",
+          category: "Arcade",
+          tags: ["multiplayer", "snake"],
+          link: "https://slither.io",
+          twoPlayer: false,
+          easy: true,
+          chromebookSafe: true,
+          plays: 0
+              },
+    {
+          id: "slope",
+          name: "Slope",
+          desc: "Fast-paced rolling ball.",
+          category: "Racing",
+          tags: ["3d", "speed"],
+          link: "https://slope-game.github.io/rungame/slope/index.html",
+          twoPlayer: false,
+          easy: false,
+          chromebookSafe: true,
+          plays: 0
+              },
+    { id: "run3", name: "Run 3", desc: "Endless space runner.", category: "Puzzle", tags: ["3d", "runner"], link: "https://run3.io", twoPlayer: false, easy: true, chromebookSafe: true, plays: 0 },
+    { id: "tetris", name: "Tetris", desc: "Classic block stacking.", category: "Puzzle", tags: ["classic", "puzzle"], link: "https://tetris.com/play-tetris", twoPlayer: false, easy: true, chromebookSafe: true, plays: 0 }
 ];
 
 // ---- Storage helpers ----
@@ -567,17 +620,30 @@ function renderHomeGameStrips() {
 // ---- Game actions ----
 function onGamePlayed(game) {
   if (!currentUser) return;
+
+    // Cooldown check: only award coins/XP every 5 minutes per game
+    const now = Date.now();
+    if (!currentUser.gamePlayTimestamps) currentUser.gamePlayTimestamps = {};
+    const lastPlayed = currentUser.gamePlayTimestamps[game.id] || 0;
+    const COOLDOWN_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const canEarnRewards = (now - lastPlayed) >= COOLDOWN_TIME;
+
+    // Update timestamp
+    currentUser.gamePlayTimestamps[game.id] = now;
   if (!currentUser.gamesPlayedMap) currentUser.gamesPlayedMap = {};
   currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
   currentUser.gamesPlayedMap[game.id] = (currentUser.gamesPlayedMap[game.id] || 0) + 1;
   currentUser.lastGameId = game.id;
   game.plays = (game.plays || 0) + 1;
 
-  const baseCoins = currentSource === "internal" ? 5 : 3;
-  const baseXP = currentSource === "internal" ? 10 : 7;
-  currentUser.coins = (currentUser.coins || 0) + baseCoins;
-  currentUser.xp = (currentUser.xp || 0) + baseXP;
+    // Only award coins/XP if cooldown has passed
+    if (canEarnRewards) {
+    const baseCoins = currentSource === "internal" ? 5 : 3;
+    const baseXP = currentSource === "internal" ? 10 : 7;
+    currentUser.coins = (currentUser.coins || 0) + baseCoins;
+    currentUser.xp = (currentUser.xp || 0) + baseXP;
 
+        }
   if (!currentUser.favoriteGameId || (currentUser.gamesPlayedMap[game.id] > (currentUser.gamesPlayedMap[currentUser.favoriteGameId] || 0))) {
     currentUser.favoriteGameId = game.id;
   }
@@ -676,6 +742,29 @@ function checkAchievements() {
   if (msgs >= 10) set.add("chat_10");
   if (days >= 3) set.add("streak_3");
   if (days >= 7) set.add("streak_7");
+
+    // Additional game play achievements
+    if (games >= 50) set.add("play_50");
+    if (games >= 100) set.add("play_100");
+    if (games >= 200) set.add("play_200");
+
+    // Additional coin achievements
+    if (coins >= 500) set.add("coins_500");
+    if (coins >= 5000) set.add("coins_5000");
+
+    // Additional chat achievements
+    if (msgs >= 50) set.add("chat_50");
+    if (msgs >= 100) set.add("chat_100");
+
+    // Additional streak achievements
+    if (days >= 14) set.add("streak_14");
+    if (days >= 30) set.add("streak_30");
+
+    // Level achievements
+    const level = getLevelFromXP(currentUser.xp || 0).level;
+    if (level >= 5) set.add("level_5");
+    if (level >= 10) set.add("level_10");
+    if (level >= 20) set.add("level_20");
 
   currentUser.earnedAchievements = Array.from(set);
   currentUser.achievementsUnlocked = currentUser.earnedAchievements.length;
@@ -1215,5 +1304,6 @@ function init() {
 
 // Start
 init();
+
 
 
