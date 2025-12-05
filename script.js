@@ -1192,8 +1192,28 @@ function init() {
   if (loader) loader.classList.add("hidden");
 
   initFirebaseIfConfigured();
+
+    // Retry Firebase init after delays (in case external scripts load slowly)
+  let retries = 0;
+  const maxRetries = 5;
+  const retryInterval = setInterval(() => {
+    if (!firebaseEnabled && retries < maxRetries) {
+      retries++;
+      console.log(`Retrying Firebase init (attempt ${retries}/${maxRetries})...`);
+      initFirebaseIfConfigured();
+    }
+    if (firebaseEnabled || retries >= maxRetries) {
+      clearInterval(retryInterval);
+      if (firebaseEnabled) {
+        console.log('Firebase enabled successfully!');
+      } else {
+        console.log('Firebase not available, using local mode.');
+      }
+    }
+  }, 500);
 }
 
 // Start
 init();
+
 
