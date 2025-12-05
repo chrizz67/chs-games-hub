@@ -134,7 +134,7 @@ const achievementsDef = [
   { id: "coins_1000", title: "Rich", desc: "Reach 1000 coins.", rarity: "epic" },
   { id: "chat_10", title: "Chatter", desc: "Send 10 messages.", rarity: "common" },
   { id: "streak_3", title: "3-Day Streak", desc: "Log in 3 days in a row.", rarity: "rare" },
-  { id: "streak_7", title: "Week Warrior", desc: "7-day login streak.", rarity: "epic" }
+    { id: "streak_7", title: "Week Warrior", desc: "7-day login streak.", rarity: "epic" },
     { id: "play_50", title: "Dedicated Player", desc: "Played 50 games.", rarity: "rare" },
     { id: "play_100", title: "Century Club", desc: "Played 100 games.", rarity: "epic" },
         { id: "play_200", title: "Game Master", desc: "Played 200 games.", rarity: "legendary" },
@@ -1427,6 +1427,7 @@ function init() {
 
 // Start
 init();
+
 
 
 
