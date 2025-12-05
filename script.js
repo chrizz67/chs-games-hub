@@ -72,7 +72,7 @@ const lbGlobalBtn = document.getElementById("lbGlobalBtn");
 const lbMetric = document.getElementById("lbMetric");
 const lbRange = document.getElementById("lbRange");
 const leaderboardList = document.getElementById("leaderboardList");
-const leaderboardHint = document.getElementById("leaderboardHint");
+// const leaderboardHint = document.getElementById("leaderboardHint"); // FIXED: Element doesn't exist in HTML
 
 // Profile big
 const profileAvatarBig = document.getElementById("profileAvatarBig");
@@ -322,11 +322,11 @@ function initFirebaseIfConfigured() {
       db = firebase.firestore();
       firebaseEnabled = true;
       chatModeLabel.textContent = "Global chat (Firebase)";
-      leaderboardHint.textContent = "Global leaderboard via Firebase. Local is still used as backup.";
+//       leaderboardHint.textContent = "Global leaderboard via Firebase. Local is still used as backup.";
       setupGlobalChatListener();
       setupGlobalLeaderboardListener();
       return;
-    }
+    // } // FIXED: Element doesn't exist
 
     // v9 style (if you ever wire helpers like window.notchrisDB + window.notchrisFirestore)
     if (window.notchrisDB && window.NOTCHRIS_BACKEND_ENABLED && window.notchrisFirestore) {
@@ -338,7 +338,7 @@ function initFirebaseIfConfigured() {
       setupGlobalChatListener();
       setupGlobalLeaderboardListener();
       return;
-    }
+    // }
 
     // Otherwise local-only
     firebaseEnabled = false;
@@ -347,7 +347,7 @@ function initFirebaseIfConfigured() {
   } catch (e) {
     console.error("Firebase init error", e);
     firebaseEnabled = false;
-  }
+  // }
 }
 
 // ---- Auth ----
@@ -1196,3 +1196,4 @@ function init() {
 
 // Start
 init();
+
