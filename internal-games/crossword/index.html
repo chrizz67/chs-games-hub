@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crossword Puzzle</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #game-container {
+            text-align: center;
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #grid {
+            display: inline-grid;
+            grid-template-columns: repeat(7, 50px);
+            gap: 2px;
+            background: #999;
+            padding: 2px;
+            margin: 20px auto;
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            position: relative;
+        }
+        .cell.black {
+            background: #333;
+            cursor: default;
+        }
+        .cell input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: transparent;
+        }
+        .cell input:focus {
+            outline: none;
+            background: #ffffcc;
+        }
+        .cell.correct input {
+            background: #90EE90;
+        }
+        .cell.wrong input {
+            background: #FFB6C1;
+        }
+        .number {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 10px;
+            color: #666;
+        }
+        #clues {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            text-align: left;
+            margin: 20px 0;
+        }
+        .clue-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .clue {
+            padding: 5px;
+            margin: 2px 0;
+            font-size: 14px;
+            color: #555;
+        }
+        button {
+            margin: 5px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>📝 Crossword Puzzle</h1>
+        <div id="grid"></div>
+        <div id="clues">
+            <div class="clue-section">
+                <h3>Across</h3>
+                <div id="across-clues"></div>
+            </div>
+            <div class="clue-section">
+                <h3>Down</h3>
+                <div id="down-clues"></div>
+            </div>
+        </div>
+        <button onclick="checkAnswers()">Check Answers</button>
+        <button onclick="revealAnswers()">Reveal All</button>
+        <button onclick="newPuzzle()">New Puzzle</button>
+    </div>
+    <script>
+        const puzzle = {
+            grid: [
+                ['C','A','T','_','D','O','G'],
+                ['O','_','_','_','A','_','O'],
+                ['D','E','S','K','T','_','A'],
+                ['E','_','U','_','_','_','T'],
+                ['_','_','N','_','B','I','R'],
+                ['_','_','_','_','O','_','D'],
+                ['_','_','_','_','O','_','_']
+            ],
+            clues: {
+                across: [
+                    {num: 1, clue: 'Furry pet that meows', answer: 'CAT', row: 0, col: 0},
+                    {num: 2, clue: 'Best friend animal', answer: 'DOG', row: 0, col: 4},
+                    {num: 3, clue: 'Furniture for writing', answer: 'DESK', row: 2, col: 0},
+                    {num: 4, clue: 'Flying animal with feathers', answer: 'BIRD', row: 4, col: 4}
+                ],
+                down: [
+                    {num: 1, clue: 'Programming instructions', answer: 'CODE', row: 0, col: 0},
+                    {num: 2, clue: 'Opposite of night', answer: 'DATA', row: 0, col: 4},
+                    {num: 5, clue: 'Yellow star in sky', answer: 'SUN', row: 2, col: 2},
+                    {num: 6, clue: 'Farm animal says baa', answer: 'GOAT', row: 0, col: 6},
+                    {num: 7, clue: 'Text novel', answer: 'BOOK', row: 2, col: 4}
+                ]
+            }
+        };
+
+        function createGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            
+            puzzle.grid.forEach((row, r) => {
+                row.forEach((cell, c) => {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'cell';
+                    
+                    if (cell === '_') {
+                        cellDiv.classList.add('black');
+                    } else {
+                        const input = document.createElement('input');
+                        input.maxLength = 1;
+                        input.dataset.row = r;
+                        input.dataset.col = c;
+                        input.dataset.answer = cell;
+                        
+                        input.addEventListener('input', (e) => {
+                            e.target.value = e.target.value.toUpperCase();
+                            if (e.target.value) {
+                                moveFocus(r, c, 1, 0);
+                            }
+                        });
+                        
+                        input.addEventListener('keydown', (e) => {
+                            if (e.key === 'Backspace' && !e.target.value) {
+                                moveFocus(r, c, -1, 0);
+                            }
+                            if (e.key === 'ArrowRight') moveFocus(r, c, 0, 1);
+                            if (e.key === 'ArrowLeft') moveFocus(r, c, 0, -1);
+                            if (e.key === 'ArrowDown') moveFocus(r, c, 1, 0);
+                            if (e.key === 'ArrowUp') moveFocus(r, c, -1, 0);
+                        });
+                        
+                        cellDiv.appendChild(input);
+                        
+                        const clueNum = getClueNumber(r, c);
+                        if (clueNum) {
+                            const numSpan = document.createElement('span');
+                            numSpan.className = 'number';
+                            numSpan.textContent = clueNum;
+                            cellDiv.appendChild(numSpan);
+                        }
+                    }
+                    
+                    grid.appendChild(cellDiv);
+                });
+            });
+        }
+
+        function getClueNumber(row, col) {
+            for (let clue of puzzle.clues.across) {
+                if (clue.row === row && clue.col === col) return clue.num;
+            }
+            for (let clue of puzzle.clues.down) {
+                if (clue.row === row && clue.col === col) return clue.num;
+            }
+            return null;
+        }
+
+        function moveFocus(row, col, dr, dc) {
+            let newRow = row + dr;
+            let newCol = col + dc;
+            
+            while (newRow >= 0 && newRow < 7 && newCol >= 0 && newCol < 7) {
+                const nextInput = document.querySelector(`input[data-row="${newRow}"][data-col="${newCol}"]`);
+                if (nextInput) {
+                    nextInput.focus();
+                    return;
+                }
+                newRow += dr;
+                newCol += dc;
+            }
+        }
+
+        function createClues() {
+            const acrossDiv = document.getElementById('across-clues');
+            const downDiv = document.getElementById('down-clues');
+            
+            acrossDiv.innerHTML = '';
+            downDiv.innerHTML = '';
+            
+            puzzle.clues.across.forEach(clue => {
+                const div = document.createElement('div');
+                div.className = 'clue';
+                div.textContent = `${clue.num}. ${clue.clue}`;
+                acrossDiv.appendChild(div);
+            });
+            
+            puzzle.clues.down.forEach(clue => {
+                const div = document.createElement('div');
+                div.className = 'clue';
+                div.textContent = `${clue.num}. ${clue.clue}`;
+                downDiv.appendChild(div);
+            });
+        }
+
+        function checkAnswers() {
+            const inputs = document.querySelectorAll('.cell input');
+            let correct = 0;
+            let total = inputs.length;
+            
+            inputs.forEach(input => {
+                const userAnswer = input.value.toUpperCase();
+                const correctAnswer = input.dataset.answer;
+                
+                input.parentElement.classList.remove('correct', 'wrong');
+                
+                if (userAnswer) {
+                    if (userAnswer === correctAnswer) {
+                        input.parentElement.classList.add('correct');
+                        correct++;
+                    } else {
+                        input.parentElement.classList.add('wrong');
+                    }
+                }
+            });
+            
+            if (correct === total) {
+                setTimeout(() => alert('🎉 Congratulations! Puzzle complete!'), 100);
+            } else {
+                setTimeout(() => alert(`${correct} out of ${total} correct!`), 100);
+            }
+        }
+
+        function revealAnswers() {
+            const inputs = document.querySelectorAll('.cell input');
+            inputs.forEach(input => {
+                input.value = input.dataset.answer;
+                input.parentElement.classList.add('correct');
+            });
+        }
+
+        function newPuzzle() {
+            const inputs = document.querySelectorAll('.cell input');
+            inputs.forEach(input => {
+                input.value = '';
+                input.parentElement.classList.remove('correct', 'wrong');
+            });
+        }
+
+        createGrid();
+        createClues();
+    </script>
+</body>
+</html>
