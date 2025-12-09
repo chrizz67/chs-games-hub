@@ -841,7 +841,7 @@ gameFullscreenBtn.addEventListener("click", () => {
   if (elem.requestFullscreen) elem.requestFullscreen();
   else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
   else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
-  else alert("Fullscreen not supported.");
+  else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
 });
 
 // ---- Achievements ----
@@ -1427,6 +1427,7 @@ function init() {
 
 // Start
 init();
+
 
 
 
