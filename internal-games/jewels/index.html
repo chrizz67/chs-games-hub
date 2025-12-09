@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jewel Quest</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%);
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            gap: 4px;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 20px auto;
+        }
+        .jewel {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .jewel:hover { transform: scale(1.1); }
+        .jewel.selected { transform: scale(1.2); border: 3px solid yellow; }
+        #info {
+            margin-top: 20px;
+            color: white;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+        }
+        .info-item {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        button {
+            margin: 10px;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>💎 Jewel Quest</h1>
+        <div id="game-board"></div>
+        <div id="info">
+            <div class="info-item">Score: <span id="score">0</span></div>
+            <div class="info-item">Moves: <span id="moves">30</span></div>
+        </div>
+        <button onclick="newGame()">New Game</button>
+    </div>
+    <script>
+        const BOARD_SIZE = 8;
+        const JEWELS = ['💎','💍','🔷','🔶','⭐','🌟','💠','🔵'];
+        let board = [];
+        let selected = null;
+        let score = 0;
+        let moves = 30;
+        
+        function createBoard() {
+            const boardEl = document.getElementById('game-board');
+            boardEl.innerHTML = '';
+            board = [];
+            
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                board[row] = [];
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const jewel = document.createElement('div');
+                    jewel.className = 'jewel';
+                    jewel.dataset.row = row;
+                    jewel.dataset.col = col;
+                    const type = JEWELS[Math.floor(Math.random() * JEWELS.length)];
+                    jewel.textContent = type;
+                    board[row][col] = type;
+                    jewel.onclick = () => handleClick(row, col, jewel);
+                    boardEl.appendChild(jewel);
+                }
+            }
+            removeInitialMatches();
+        }
+        
+        function removeInitialMatches() {
+            let hasMatches = true;
+            while (hasMatches) {
+                hasMatches = false;
+                for (let row = 0; row < BOARD_SIZE; row++) {
+                    for (let col = 0; col < BOARD_SIZE; col++) {
+                        const matches = findMatches(row, col);
+                        if (matches.length >= 3) {
+                            board[row][col] = JEWELS[Math.floor(Math.random() * JEWELS.length)];
+                            hasMatches = true;
+                        }
+                    }
+                }
+            }
+            updateBoard();
+        }
+        
+        function handleClick(row, col, jewelEl) {
+            if (moves <= 0) return;
+            
+            if (!selected) {
+                selected = {row, col, el: jewelEl};
+                jewelEl.classList.add('selected');
+            } else {
+                const dr = Math.abs(selected.row - row);
+                const dc = Math.abs(selected.col - col);
+                
+                if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
+                    swapJewels(selected.row, selected.col, row, col);
+                    moves--;
+                    document.getElementById('moves').textContent = moves;
+                    
+                    setTimeout(() => {
+                        if (!checkMatches()) {
+                            swapJewels(selected.row, selected.col, row, col);
+                        }
+                        updateBoard();
+                        if (moves <= 0) {
+                            setTimeout(() => alert(`Game Over! Final Score: ${score}`), 100);
+                        }
+                    }, 300);
+                }
+                
+                selected.el.classList.remove('selected');
+                jewelEl.classList.remove('selected');
+                selected = null;
+            }
+        }
+        
+        function swapJewels(r1, c1, r2, c2) {
+            const temp = board[r1][c1];
+            board[r1][c1] = board[r2][c2];
+            board[r2][c2] = temp;
+            updateBoard();
+        }
+        
+        function findMatches(row, col) {
+            const type = board[row][col];
+            const matches = [{row, col}];
+            
+            let left = col - 1;
+            while (left >= 0 && board[row][left] === type) {
+                matches.push({row, col: left});
+                left--;
+            }
+            
+            let right = col + 1;
+            while (right < BOARD_SIZE && board[row][right] === type) {
+                matches.push({row, col: right});
+                right++;
+            }
+            
+            if (matches.length < 3) {
+                matches.length = 1;
+                
+                let up = row - 1;
+                while (up >= 0 && board[up][col] === type) {
+                    matches.push({row: up, col});
+                    up--;
+                }
+                
+                let down = row + 1;
+                while (down < BOARD_SIZE && board[down][col] === type) {
+                    matches.push({row: down, col});
+                    down++;
+                }
+            }
+            
+            return matches.length >= 3 ? matches : [];
+        }
+        
+        function checkMatches() {
+            const allMatches = [];
+            
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    const matches = findMatches(row, col);
+                    if (matches.length >= 3) {
+                        matches.forEach(m => {
+                            if (!allMatches.some(am => am.row === m.row && am.col === m.col)) {
+                                allMatches.push(m);
+                            }
+                        });
+                    }
+                }
+            }
+            
+            if (allMatches.length > 0) {
+                score += allMatches.length * 10;
+                document.getElementById('score').textContent = score;
+                
+                allMatches.forEach(m => {
+                    board[m.row][m.col] = null;
+                });
+                
+                dropJewels();
+                fillEmpty();
+                updateBoard();
+                
+                setTimeout(() => {
+                    if (checkMatches()) {
+                        checkMatches();
+                    }
+                }, 500);
+                
+                return true;
+            }
+            
+            return false;
+        }
+        
+        function dropJewels() {
+            for (let col = 0; col < BOARD_SIZE; col++) {
+                for (let row = BOARD_SIZE - 1; row >= 0; row--) {
+                    if (board[row][col] === null) {
+                        for (let r = row - 1; r >= 0; r--) {
+                            if (board[r][col] !== null) {
+                                board[row][col] = board[r][col];
+                                board[r][col] = null;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function fillEmpty() {
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    if (board[row][col] === null) {
+                        board[row][col] = JEWELS[Math.floor(Math.random() * JEWELS.length)];
+                    }
+                }
+            }
+        }
+        
+        function updateBoard() {
+            const boardEl = document.getElementById('game-board');
+            const jewels = boardEl.getElementsByClassName('jewel');
+            
+            let index = 0;
+            for (let row = 0; row < BOARD_SIZE; row++) {
+                for (let col = 0; col < BOARD_SIZE; col++) {
+                    jewels[index].textContent = board[row][col];
+                    index++;
+                }
+            }
+        }
+        
+        function newGame() {
+            score = 0;
+            moves = 30;
+            selected = null;
+            document.getElementById('score').textContent = score;
+            document.getElementById('moves').textContent = moves;
+            createBoard();
+        }
+        
+        newGame();
+    </script>
+</body>
+</html>
